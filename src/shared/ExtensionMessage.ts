@@ -46,6 +46,8 @@ export interface ExtensionState {
 	taskHistory: HistoryItem[]
 	shouldShowAnnouncement: boolean
 	autoApprovalSettings: AutoApprovalSettings
+	isSignedIn: boolean
+	user?: { name: string; email: string }
 }
 
 export interface ClineMessage {

@@ -23,6 +23,9 @@ import { openMention } from "../mentions"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { AutoApprovalSettings, DEFAULT_AUTO_APPROVAL_SETTINGS } from "../../shared/AutoApprovalSettings"
+import { IAuthorizationFlowCallbackQuery } from "../../services/robodev/interfaces/authorization-flow-callback.query.interface"
+import { RobodevClient } from "../../services/robodev/robodev.client"
+import { IUserMeResponse } from "../../services/robodev/interfaces/users-me.response.interface"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -60,6 +63,12 @@ type GlobalStateKey =
 	| "openRouterModelId"
 	| "openRouterModelInfo"
 	| "autoApprovalSettings"
+	| "isSignedIn"
+	| "authFlow"
+	| "idToken"
+	| "accessToken"
+	| "refreshToken"
+	| "user"
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -79,6 +88,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private workspaceTracker?: WorkspaceTracker
 	mcpHub?: McpHub
 	private latestAnnouncementId = "dec-17-2024" // update to some unique identifier when we add a new announcement
+	private robodevClient: RobodevClient
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -88,6 +98,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		ClineProvider.activeInstances.add(this)
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.mcpHub = new McpHub(this)
+		this.robodevClient = new RobodevClient()
 	}
 
 	/*
@@ -206,7 +217,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async initClineWithHistoryItem(historyItem: HistoryItem) {
 		await this.clearTask()
-		const { apiConfiguration, customInstructions, autoApprovalSettings } = await this.getState()
+		const { apiConfiguration, customInstructions, autoApprovalSettings, isSignedIn } = await this.getState()
 		this.cline = new Cline(
 			this,
 			apiConfiguration,
@@ -215,6 +226,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			undefined,
 			undefined,
 			historyItem,
+			isSignedIn,
 		)
 	}
 
@@ -314,6 +326,22 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		webview.onDidReceiveMessage(
 			async (message: WebviewMessage) => {
 				switch (message.type) {
+					case "googleLogin": {
+						vscode.window.showInformationMessage("Google Login" + message.text)
+
+						const url = await this.robodevClient.getLoginUrl()
+
+						vscode.env.openExternal(vscode.Uri.parse(url))
+
+						break
+					}
+					case "googleLogout": {
+						await this.updateGlobalState("isSignedIn", false)
+						await this.postStateToWebview()
+						await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+						vscode.window.showInformationMessage("Logged out successfully")
+						break
+					}
 					case "webviewDidLaunch":
 						this.postStateToWebview()
 						this.workspaceTracker?.initializeFilePaths() // don't await
@@ -824,12 +852,19 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async postStateToWebview() {
 		const state = await this.getStateToPostToWebview()
-		this.postMessageToWebview({ type: "state", state })
+		await this.postMessageToWebview({ type: "state", state })
 	}
 
 	async getStateToPostToWebview() {
-		const { apiConfiguration, lastShownAnnouncementId, customInstructions, taskHistory, autoApprovalSettings } =
-			await this.getState()
+		const {
+			apiConfiguration,
+			isSignedIn,
+			lastShownAnnouncementId,
+			customInstructions,
+			taskHistory,
+			autoApprovalSettings,
+			user,
+		} = await this.getState()
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
 			apiConfiguration,
@@ -839,6 +874,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			taskHistory: (taskHistory || []).filter((item) => item.ts && item.task).sort((a, b) => b.ts - a.ts),
 			shouldShowAnnouncement: lastShownAnnouncementId !== this.latestAnnouncementId,
 			autoApprovalSettings,
+			isSignedIn,
+			user,
 		}
 	}
 
@@ -923,6 +960,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			customInstructions,
 			taskHistory,
 			autoApprovalSettings,
+			isSignedIn,
+			user,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -952,6 +991,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("customInstructions") as Promise<string | undefined>,
 			this.getGlobalState("taskHistory") as Promise<HistoryItem[] | undefined>,
 			this.getGlobalState("autoApprovalSettings") as Promise<AutoApprovalSettings | undefined>,
+			this.getGlobalState("isSignedIn") as Promise<boolean>,
+			this.getGlobalState("user") as Promise<IUserMeResponse | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -999,6 +1040,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			customInstructions,
 			taskHistory,
 			autoApprovalSettings: autoApprovalSettings || DEFAULT_AUTO_APPROVAL_SETTINGS, // default value can be 0 or empty string
+			isSignedIn: isSignedIn,
+			user: user,
 		}
 	}
 
@@ -1085,5 +1128,23 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		vscode.window.showInformationMessage("State reset")
 		await this.postStateToWebview()
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+	}
+
+	async handleAuthorizationFlowCallback(data: IAuthorizationFlowCallbackQuery) {
+		await this.handleGoogleAuthorizationCallback(data)
+	}
+
+	private async handleGoogleAuthorizationCallback(data: IAuthorizationFlowCallbackQuery) {
+		const user = await this.robodevClient.getUsersMe(data.accessToken)
+
+		vscode.window.showInformationMessage("Hello: " + user?.email)
+
+		if (user) {
+			await this.updateGlobalState("isSignedIn", true)
+			await this.updateGlobalState("accessToken", data.accessToken)
+			await this.updateGlobalState("refreshToken", data.refreshToken)
+			await this.updateGlobalState("user", user)
+			await this.postStateToWebview()
+		}
 	}
 }
