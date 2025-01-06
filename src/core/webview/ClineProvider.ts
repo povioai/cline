@@ -26,8 +26,8 @@ import { AutoApprovalSettings, DEFAULT_AUTO_APPROVAL_SETTINGS } from "../../shar
 import { BrowserSettings, DEFAULT_BROWSER_SETTINGS } from "../../shared/BrowserSettings"
 import { ChatSettings, DEFAULT_CHAT_SETTINGS } from "../../shared/ChatSettings"
 import { IAuthorizationFlowCallbackQuery } from "../../services/robodev/interfaces/authorization-flow-callback.query.interface"
-import { RobodevClient } from "../../services/robodev/robodev.client"
-import { IUserMeResponse } from "../../services/robodev/interfaces/users-me.response.interface"
+import { IUser } from "../../services/robodev/interfaces/user.interface"
+import { RobodevLoginClient } from "../../services/robodev/login/robodev-login.client"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -95,7 +95,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private workspaceTracker?: WorkspaceTracker
 	mcpHub?: McpHub
 	private latestAnnouncementId = "jan-20-2025" // update to some unique identifier when we add a new announcement
-	private robodevClient: RobodevClient
+	private robodevLoginClient: RobodevLoginClient
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -105,7 +105,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		ClineProvider.activeInstances.add(this)
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.mcpHub = new McpHub(this)
-		this.robodevClient = new RobodevClient()
+		this.robodevLoginClient = new RobodevLoginClient()
 	}
 
 	/*
@@ -350,13 +350,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			async (message: WebviewMessage) => {
 				switch (message.type) {
 					case "googleLogin": {
-						const url = await this.robodevClient.getLoginUrl()
+						const url = await this.robodevLoginClient.getLoginUrl()
 						vscode.env.openExternal(vscode.Uri.parse(url))
-
 						break
 					}
 					case "googleLogout": {
 						await this.updateGlobalState("isSignedIn", false)
+						await this.updateGlobalState("accessToken", undefined)
+						await this.updateGlobalState("refreshToken", undefined)
+						await this.updateGlobalState("idToken", undefined)
 						await this.postStateToWebview()
 						await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 						vscode.window.showInformationMessage("Logged out successfully")
@@ -1182,7 +1184,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("chatSettings") as Promise<ChatSettings | undefined>,
 			this.getGlobalState("vsCodeLmModelSelector") as Promise<vscode.LanguageModelChatSelector | undefined>,
 			this.getGlobalState("isSignedIn") as Promise<boolean>,
-			this.getGlobalState("user") as Promise<IUserMeResponse | undefined>,
+			this.getGlobalState("user") as Promise<IUser | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -1331,10 +1333,9 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async handleAuthorizationFlowCallback(data: IAuthorizationFlowCallbackQuery) {
-		const user = await this.robodevClient.getUsersMe(data.accessToken)
+		const user = await this.robodevLoginClient.getUsersMe(data.accessToken)
 
 		if (!user) {
-			vscode.window.showErrorMessage("User not found!")
 			return
 		}
 

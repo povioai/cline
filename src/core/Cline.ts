@@ -53,7 +53,7 @@ import { constructNewFileContent } from "./assistant-message/diff"
 import { parseMentions } from "./mentions"
 import { formatResponse } from "./prompts/responses"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
-import { RobodevClient } from "../services/robodev/robodev.client"
+import { RobodevUsageLogClient } from "../services/robodev/usage-logs/robodev-usage-log.client"
 import { OpenRouterHandler } from "../api/providers/openrouter"
 import { getNextTruncationRange, getTruncatedMessages } from "./sliding-window"
 import { SYSTEM_PROMPT } from "./prompts/system"
@@ -114,7 +114,7 @@ export class Cline {
 	private didCompleteReadingStream = false
 	private didAutomaticallyRetryFailedApiRequest = false
 	private apiConfiguration: ApiConfiguration
-	private robodevClient: RobodevClient
+	private usageLogRobodevClient: RobodevUsageLogClient
 
 	constructor(
 		provider: ClineProvider,
@@ -140,7 +140,7 @@ export class Cline {
 		this.chatSettings = chatSettings
 		this.isSignedIn = isSignedIn
 		this.apiConfiguration = apiConfiguration
-		this.robodevClient = new RobodevClient()
+		this.usageLogRobodevClient = new RobodevUsageLogClient()
 		if (historyItem) {
 			this.taskId = historyItem.id
 			this.conversationHistoryDeletedRange = historyItem.conversationHistoryDeletedRange
