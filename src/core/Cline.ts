@@ -50,7 +50,7 @@ import { addUserInstructions, SYSTEM_PROMPT } from "./prompts/system"
 import { truncateHalfConversation } from "./sliding-window"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
 import { showSystemNotification } from "../integrations/notifications"
-import { RobodevClient } from "../services/robodev/robodev.client"
+import { RobodevUsageLogClient } from "../services/robodev/usage-logs/robodev-usage-log.client"
 
 const cwd =
 	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
@@ -95,7 +95,7 @@ export class Cline {
 	private didAlreadyUseTool = false
 	private didCompleteReadingStream = false
 	private apiConfiguration: ApiConfiguration
-	private robodevClient: RobodevClient
+	private usageLogRobodevClient: RobodevUsageLogClient
 
 	constructor(
 		provider: ClineProvider,
@@ -117,7 +117,7 @@ export class Cline {
 		this.autoApprovalSettings = autoApprovalSettings
 		this.isSignedIn = isSignedIn
 		this.apiConfiguration = apiConfiguration
-		this.robodevClient = new RobodevClient()
+		this.usageLogRobodevClient = new RobodevUsageLogClient()
 		if (historyItem) {
 			this.taskId = historyItem.id
 			this.resumeTaskFromHistory()
@@ -848,7 +848,7 @@ export class Cline {
 
 		const stream = this.api.createMessage(systemPrompt, this.apiConversationHistory)
 		const accessToken = ((await this.providerRef.deref()?.getGlobalState("accessToken")) as string) ?? ""
-		await this.robodevClient.postTask(accessToken, {
+		await this.usageLogRobodevClient.createUsageLog(accessToken, {
 			message: JSON.stringify(this.apiConversationHistory),
 			customInstructions: settingsCustomInstructions ?? "",
 			llmModel: this.api.getModel().id,
