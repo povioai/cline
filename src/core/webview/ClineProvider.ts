@@ -25,8 +25,11 @@ import { getUri } from "./getUri"
 import { AutoApprovalSettings, DEFAULT_AUTO_APPROVAL_SETTINGS } from "../../shared/AutoApprovalSettings"
 import { IAuthorizationFlowCallbackQuery } from "../../services/robodev/interfaces/authorization-flow-callback.query.interface"
 import { IUser } from "../../services/robodev/interfaces/user.interface"
-import { RobodevLoginClient } from "../../services/robodev/login/robodev-login.client"
+import { RobodevAuthClient } from "../../services/robodev/auth/robodev-auth.client"
 import { RobodevOrganizationClient } from "../../services/robodev/organization/robodev-organization.client"
+import { robodevRestClient } from "../../services/robodev/robodev-rest.client"
+import { AuthorizationHeaderInterceptor } from "../../utils/rest/interceptors/authorization-header.interceptor"
+import { TokenExpiredInterceptor } from "../../utils/rest/interceptors/token-expired.interceptor"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -89,7 +92,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private workspaceTracker?: WorkspaceTracker
 	mcpHub?: McpHub
 	private latestAnnouncementId = "dec-17-2024" // update to some unique identifier when we add a new announcement
-	private robodevLoginClient: RobodevLoginClient
+	private robodevLoginClient: RobodevAuthClient
 	private robodevOrganizationClient: RobodevOrganizationClient
 
 	constructor(
@@ -100,7 +103,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		ClineProvider.activeInstances.add(this)
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.mcpHub = new McpHub(this)
-		this.robodevLoginClient = new RobodevLoginClient()
+		this.robodevLoginClient = new RobodevAuthClient()
 		this.robodevOrganizationClient = new RobodevOrganizationClient()
 	}
 
@@ -335,13 +338,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					}
 					case "googleLogout": {
-						await this.updateGlobalState("isSignedIn", false)
-						await this.updateGlobalState("accessToken", undefined)
-						await this.updateGlobalState("refreshToken", undefined)
-						await this.updateGlobalState("idToken", undefined)
-						await this.postStateToWebview()
-						await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
-						vscode.window.showInformationMessage("Logged out successfully")
+						await this.logout()
 						break
 					}
 					case "webviewDidLaunch":
@@ -1132,6 +1129,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 	}
 
+	private async logout () {
+		await this.updateGlobalState("isSignedIn", false)
+		await this.updateGlobalState("accessToken", undefined)
+		await this.updateGlobalState("refreshToken", undefined)
+		await this.updateGlobalState("idToken", undefined)
+		await this.postStateToWebview()
+		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+		vscode.window.showInformationMessage("Logged out successfully")
+	}
+
 	async handleAuthorizationFlowCallback(data: IAuthorizationFlowCallbackQuery) {
 		const user = await this.robodevLoginClient.getUsersMe(data.accessToken)
 
@@ -1146,12 +1153,21 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.updateGlobalState("refreshToken", data.refreshToken)
 		await this.updateGlobalState("user", user)
 		await this.postStateToWebview()
+
+		robodevRestClient.attachInterceptor(AuthorizationHeaderInterceptor, async () => {
+			const accessToken = await this.getGlobalState("accessToken")
+
+			return accessToken ? `Bearer ${accessToken}` : null
+		})
+
+		robodevRestClient.attachInterceptor(TokenExpiredInterceptor, async () => {
+			await this.logout()
+		})
 	}
 
-	private async getOrganizationKeys() {
-		const accessToken = (await this.getGlobalState("accessToken")) as string
 
-		const paginatedOrganizations = await this.robodevOrganizationClient.getUserOrganizations(accessToken)
+	private async getOrganizationKeys() {
+		const paginatedOrganizations = await this.robodevOrganizationClient.getUserOrganizations()
 
 		const firstOrganization = paginatedOrganizations.items[0]
 
@@ -1159,7 +1175,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			return [undefined, undefined]
 		}
 
-		const organization = await this.robodevOrganizationClient.getOrganizationById(accessToken, firstOrganization.id)
+		const organization = await this.robodevOrganizationClient.getOrganizationById(firstOrganization.id)
 
 		const anthropicKey = organization?.keys?.find((data) => data.provider === "ANTHROPIC")?.key
 

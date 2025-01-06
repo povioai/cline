@@ -847,8 +847,7 @@ export class Cline {
 		}
 
 		const stream = this.api.createMessage(systemPrompt, this.apiConversationHistory)
-		const accessToken = ((await this.providerRef.deref()?.getGlobalState("accessToken")) as string) ?? ""
-		await this.usageLogRobodevClient.createUsageLog(accessToken, {
+		await this.usageLogRobodevClient.createUsageLog({
 			message: JSON.stringify(this.apiConversationHistory),
 			customInstructions: settingsCustomInstructions ?? "",
 			llmModel: this.api.getModel().id,

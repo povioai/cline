@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, CreateAxiosDefaults } from "axios"
 import { z } from "zod"
 
-import { RestInterceptor } from "./rest-interceptor"
+import { RestInterceptor } from "./interceptors/rest-interceptor"
 import { ErrorHandler, GeneralErrorCodes, SharedErrorHandler } from "./error-handling"
 
 interface RequestInfo<ZResDto extends z.ZodRawShape, ResDto, Res, ECodes extends string> {
@@ -34,9 +34,7 @@ export class RestClient {
 	}
 
 	public attachInterceptors<T extends any[]>(interceptors?: RestInterceptor<T>[], ...args: T) {
-		if (interceptors) {
-			interceptors.forEach((interceptor) => this.attachInterceptor(interceptor, ...args))
-		}
+			interceptors?.forEach((interceptor) => this.attachInterceptor(interceptor, ...args))
 	}
 
 	public attachInterceptor<T extends any[]>(interceptor: RestInterceptor<T>, ...args: T) {
