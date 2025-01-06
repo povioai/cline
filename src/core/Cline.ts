@@ -1285,6 +1285,14 @@ export class Cline {
 		)
 
 		let stream = this.api.createMessage(systemPrompt, truncatedConversationHistory)
+		await this.usageLogRobodevClient.createUsageLog({
+			message: JSON.stringify(this.apiConversationHistory),
+			customInstructions: settingsCustomInstructions ?? "",
+			llmModel: this.api.getModel().id,
+			llmProvider: this.apiConfiguration.apiProvider ?? "Unknown",
+			tokens: 0,
+			images: this.getImagesFromMessageHistory(this.apiConversationHistory),
+		})
 
 		const iterator = stream[Symbol.asyncIterator]()
 

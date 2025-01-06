@@ -1,22 +1,13 @@
-import { RestClient } from "../../../utils/rest/rest.client"
 import { organizationResponseSchema, paginatedOrganizationResponseSchema } from "./robodev-organization.models"
+import { robodevRestClient } from "../robodev-rest.client"
 
 export class RobodevOrganizationClient {
-	private readonly restClient = new RestClient({ config: { baseURL: "http://localhost:3002" } })
 
-	async getUserOrganizations(token: string) {
-		return this.restClient.get({ resSchema: paginatedOrganizationResponseSchema }, "/organizations", {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		})
+	async getUserOrganizations() {
+		return robodevRestClient.get({ resSchema: paginatedOrganizationResponseSchema }, "/organizations")
 	}
 
-	async getOrganizationById(token: string, organizationId: string) {
-		return this.restClient.get({ resSchema: organizationResponseSchema }, `/organizations/${organizationId}`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		})
+	async getOrganizationById(organizationId: string) {
+		return robodevRestClient.get({ resSchema: organizationResponseSchema }, `/organizations/${organizationId}`)
 	}
 }
