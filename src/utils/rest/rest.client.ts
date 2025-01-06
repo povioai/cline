@@ -3,7 +3,6 @@ import { z } from "zod"
 
 import { RestInterceptor } from "./rest-interceptor"
 import { ErrorHandler, GeneralErrorCodes, SharedErrorHandler } from "./error-handling"
-import * as vscode from "vscode"
 
 interface RequestInfo<ZResDto extends z.ZodRawShape, ResDto, Res, ECodes extends string> {
 	resSchema: z.ZodEffects<z.ZodObject<ZResDto, "strip", z.ZodTypeAny, ResDto>, Res> | z.ZodSchema<Res>
@@ -35,7 +34,7 @@ export class RestClient {
 	}
 
 	public attachInterceptors<T extends any[]>(interceptors?: RestInterceptor<T>[], ...args: T) {
-		if (interceptors != null) {
+		if (interceptors) {
 			interceptors.forEach((interceptor) => this.attachInterceptor(interceptor, ...args))
 		}
 	}
