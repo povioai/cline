@@ -140,7 +140,6 @@ export function activate(context: vscode.ExtensionContext) {
 		const path = uri.path
 		const query = new URLSearchParams(uri.query.replace(/\+/g, "%2B"))
 		const visibleProvider = ClineProvider.getVisibleInstance()
-		vscode.window.showInformationMessage("HERE: " + path)
 
 		if (!visibleProvider) {
 			return
