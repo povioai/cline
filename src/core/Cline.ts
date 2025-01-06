@@ -53,6 +53,7 @@ import { constructNewFileContent } from "./assistant-message/diff"
 import { parseMentions } from "./mentions"
 import { formatResponse } from "./prompts/responses"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
+import { RobodevClient } from "../services/robodev/robodev.client"
 import { OpenRouterHandler } from "../api/providers/openrouter"
 import { getNextTruncationRange, getTruncatedMessages } from "./sliding-window"
 import { SYSTEM_PROMPT } from "./prompts/system"
@@ -75,6 +76,7 @@ export class Cline {
 	browserSession: BrowserSession
 	private didEditFile: boolean = false
 	customInstructions?: string
+	isSignedIn: boolean
 	autoApprovalSettings: AutoApprovalSettings
 	private browserSettings: BrowserSettings
 	private chatSettings: ChatSettings
@@ -111,6 +113,7 @@ export class Cline {
 	private didAlreadyUseTool = false
 	private didCompleteReadingStream = false
 	private didAutomaticallyRetryFailedApiRequest = false
+	private apiConfiguration: ApiConfiguration
 
 	constructor(
 		provider: ClineProvider,
@@ -122,6 +125,7 @@ export class Cline {
 		task?: string,
 		images?: string[],
 		historyItem?: HistoryItem,
+		isSignedIn: boolean = false,
 	) {
 		this.providerRef = new WeakRef(provider)
 		this.api = buildApiHandler(apiConfiguration)
@@ -133,6 +137,8 @@ export class Cline {
 		this.autoApprovalSettings = autoApprovalSettings
 		this.browserSettings = browserSettings
 		this.chatSettings = chatSettings
+		this.isSignedIn = isSignedIn
+		this.apiConfiguration = apiConfiguration
 		if (historyItem) {
 			this.taskId = historyItem.id
 			this.conversationHistoryDeletedRange = historyItem.conversationHistoryDeletedRange
@@ -3298,5 +3304,16 @@ export class Cline {
 		}
 
 		return `<environment_details>\n${details.trim()}\n</environment_details>`
+	}
+
+	private getImagesFromMessageHistory(messages: Anthropic.MessageParam[]): string[] {
+		const contentWithImages = messages
+			.filter((m) => Array.isArray(m.content) && m.content.some((content) => content.type === "image"))
+			.map((m) => m.content)
+			.flat()
+
+		return contentWithImages
+			.filter((content: any) => content.type === "image")
+			.map((content: any) => content.source.data)
 	}
 }

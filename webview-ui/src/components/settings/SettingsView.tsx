@@ -17,8 +17,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
 
 	const handleSubmit = () => {
-		const apiValidationResult = validateApiConfiguration(apiConfiguration)
-		const modelIdValidationResult = validateModelId(apiConfiguration, openRouterModels)
+		const apiValidationResult = undefined // validateApiConfiguration(apiConfiguration)
+		const modelIdValidationResult = undefined // validateModelId(apiConfiguration, openRouterModels)
 
 		setApiErrorMessage(apiValidationResult)
 		setModelIdErrorMessage(modelIdValidationResult)
@@ -31,6 +31,10 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 			})
 			onDone()
 		}
+	}
+
+	const handleLogOut = () => {
+		vscode.postMessage({ type: "googleLogout" })
 	}
 
 	useEffect(() => {
@@ -112,6 +116,10 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 						These instructions are added to the end of the system prompt sent with every request.
 					</p>
 				</div>
+
+				<VSCodeButton onClick={handleLogOut} style={{ marginTop: "5px", width: "auto" }}>
+					Log out
+				</VSCodeButton>
 
 				{IS_DEV && (
 					<>

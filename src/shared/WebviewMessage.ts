@@ -38,6 +38,8 @@ export interface WebviewMessage {
 		| "toggleMcpServer"
 		| "getLatestState"
 	// | "relaunchChromeDebugMode"
+		| "googleLogin"
+		| "googleLogout"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -53,6 +55,8 @@ export interface WebviewMessage {
 	serverName?: string
 	toolName?: string
 	autoApprove?: boolean
+
+	isSignedIn?: boolean
 }
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"

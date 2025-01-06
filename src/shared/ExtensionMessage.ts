@@ -51,6 +51,8 @@ export interface ExtensionState {
 	autoApprovalSettings: AutoApprovalSettings
 	browserSettings: BrowserSettings
 	chatSettings: ChatSettings
+	isSignedIn: boolean
+	user?: { name: string; email: string }
 }
 
 export interface ClineMessage {
