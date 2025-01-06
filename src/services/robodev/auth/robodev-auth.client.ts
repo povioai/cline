@@ -2,12 +2,11 @@ import {
 	googleUrlResponseSchema,
 	UserMeResponse,
 	userMeResponseSchema,
-	UserRegisterRequest
+	UserRegisterRequest,
 } from "./robodev-auth.models"
 import { robodevRestClient } from "../robodev-rest.client"
 
 export class RobodevAuthClient {
-
 	async getLoginUrl(): Promise<string> {
 		const data = await robodevRestClient.get({ resSchema: googleUrlResponseSchema }, "/auth/google/login")
 
@@ -15,19 +14,19 @@ export class RobodevAuthClient {
 	}
 
 	async getUsersMe(token: string): Promise<UserMeResponse | undefined> {
-			const data = await robodevRestClient.get(
-				{
-					resSchema: userMeResponseSchema,
+		const data = await robodevRestClient.get(
+			{
+				resSchema: userMeResponseSchema,
+			},
+			"/user/me",
+			{
+				headers: {
+					Authorization: `Bearer ${token}`,
 				},
-				"/user/me",
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				}
-			)
+			},
+		)
 
-			return data
+		return data
 	}
 
 	async registerGoogleUser(token: string, data: UserRegisterRequest): Promise<void> {
