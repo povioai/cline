@@ -327,10 +327,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			async (message: WebviewMessage) => {
 				switch (message.type) {
 					case "googleLogin": {
-						vscode.window.showInformationMessage("Google Login" + message.text)
-
 						const url = await this.robodevClient.getLoginUrl()
-
 						vscode.env.openExternal(vscode.Uri.parse(url))
 
 						break
@@ -1131,20 +1128,19 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async handleAuthorizationFlowCallback(data: IAuthorizationFlowCallbackQuery) {
-		await this.handleGoogleAuthorizationCallback(data)
-	}
-
-	private async handleGoogleAuthorizationCallback(data: IAuthorizationFlowCallbackQuery) {
 		const user = await this.robodevClient.getUsersMe(data.accessToken)
 
-		vscode.window.showInformationMessage("Hello: " + user?.email)
-
-		if (user) {
-			await this.updateGlobalState("isSignedIn", true)
-			await this.updateGlobalState("accessToken", data.accessToken)
-			await this.updateGlobalState("refreshToken", data.refreshToken)
-			await this.updateGlobalState("user", user)
-			await this.postStateToWebview()
+		if (!user) {
+			vscode.window.showErrorMessage("User not found!")
+			return
 		}
+
+		vscode.window.showInformationMessage("Logged in successfully")
+
+		await this.updateGlobalState("isSignedIn", true)
+		await this.updateGlobalState("accessToken", data.accessToken)
+		await this.updateGlobalState("refreshToken", data.refreshToken)
+		await this.updateGlobalState("user", user)
+		await this.postStateToWebview()
 	}
 }

@@ -95,6 +95,7 @@ export class Cline {
 	private didAlreadyUseTool = false
 	private didCompleteReadingStream = false
 	private apiConfiguration: ApiConfiguration
+	private robodevClient: RobodevClient
 
 	constructor(
 		provider: ClineProvider,
@@ -116,6 +117,7 @@ export class Cline {
 		this.autoApprovalSettings = autoApprovalSettings
 		this.isSignedIn = isSignedIn
 		this.apiConfiguration = apiConfiguration
+		this.robodevClient = new RobodevClient()
 		if (historyItem) {
 			this.taskId = historyItem.id
 			this.resumeTaskFromHistory()
@@ -846,7 +848,7 @@ export class Cline {
 
 		const stream = this.api.createMessage(systemPrompt, this.apiConversationHistory)
 		const accessToken = ((await this.providerRef.deref()?.getGlobalState("accessToken")) as string) ?? ""
-		await new RobodevClient().postTask(accessToken, {
+		await this.robodevClient.postTask(accessToken, {
 			message: JSON.stringify(this.apiConversationHistory),
 			customInstructions: settingsCustomInstructions ?? "",
 			llmModel: this.api.getModel().id,
