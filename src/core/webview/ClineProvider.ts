@@ -1333,7 +1333,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		})
 	}
 
-	private async logout () {
+	private async logout() {
 		await this.updateGlobalState("isSignedIn", false)
 		await this.updateGlobalState("accessToken", undefined)
 		await this.updateGlobalState("refreshToken", undefined)
@@ -1368,7 +1368,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			await this.logout()
 		})
 	}
-
 
 	private async getOrganizationKeys() {
 		const paginatedOrganizations = await this.robodevOrganizationClient.getUserOrganizations()

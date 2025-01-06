@@ -1,27 +1,26 @@
-import { AxiosError } from "axios";
+import { AxiosError } from "axios"
 
-
-import { RestInterceptor } from "./rest-interceptor";
+import { RestInterceptor } from "./rest-interceptor"
 
 export const TokenExpiredInterceptor = new RestInterceptor((client, onExpired: () => Promise<void>) => {
 	return client.interceptors.response.use(
 		(response) => {
-			return response;
+			return response
 		},
 		async (error) => {
 			if (!(error instanceof AxiosError)) {
-				return Promise.reject(error);
+				return Promise.reject(error)
 			}
 
-			const { config } = error;
+			const { config } = error
 
-			const hasFailedDueToAccessTokenExpiry = error.response?.status === 401;
+			const hasFailedDueToAccessTokenExpiry = error.response?.status === 401
 
 			if (config && hasFailedDueToAccessTokenExpiry) {
-				await onExpired();
+				await onExpired()
 			}
 
-			return Promise.reject(error);
+			return Promise.reject(error)
 		},
-	);
-});
+	)
+})

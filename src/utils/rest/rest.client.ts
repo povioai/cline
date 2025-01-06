@@ -34,7 +34,7 @@ export class RestClient {
 	}
 
 	public attachInterceptors<T extends any[]>(interceptors?: RestInterceptor<T>[], ...args: T) {
-			interceptors?.forEach((interceptor) => this.attachInterceptor(interceptor, ...args))
+		interceptors?.forEach((interceptor) => this.attachInterceptor(interceptor, ...args))
 	}
 
 	public attachInterceptor<T extends any[]>(interceptor: RestInterceptor<T>, ...args: T) {
