@@ -114,6 +114,7 @@ export class Cline {
 	private didCompleteReadingStream = false
 	private didAutomaticallyRetryFailedApiRequest = false
 	private apiConfiguration: ApiConfiguration
+	private robodevClient: RobodevClient
 
 	constructor(
 		provider: ClineProvider,
@@ -139,6 +140,7 @@ export class Cline {
 		this.chatSettings = chatSettings
 		this.isSignedIn = isSignedIn
 		this.apiConfiguration = apiConfiguration
+		this.robodevClient = new RobodevClient()
 		if (historyItem) {
 			this.taskId = historyItem.id
 			this.conversationHistoryDeletedRange = historyItem.conversationHistoryDeletedRange

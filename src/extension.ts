@@ -166,10 +166,9 @@ export function activate(context: vscode.ExtensionContext) {
 				const refreshToken = query.get("refreshToken")
 				const idToken = query.get("idToken")
 
-				vscode.window.showInformationMessage("Authenticated successfully")
-
 				if (!accessToken || !refreshToken || !idToken) {
-					vscode.window.showErrorMessage("Failed to authenticate")
+					vscode.window.showErrorMessage("Failed to login")
+					return
 				}
 
 				const data: IAuthorizationFlowCallbackQuery = {

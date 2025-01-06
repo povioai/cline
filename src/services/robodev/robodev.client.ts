@@ -24,7 +24,7 @@ export class RobodevClient {
 			return response.data
 		} catch (e: any) {
 			vscode.window.showErrorMessage("Failed to get user data: ", e.message)
-			return;
+			return
 		}
 	}
 

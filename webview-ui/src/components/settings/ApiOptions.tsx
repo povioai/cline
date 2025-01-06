@@ -1,8 +1,4 @@
-import {
-	VSCodeDropdown,
-	VSCodeLink,
-	VSCodeOption,
-} from "@vscode/webview-ui-toolkit/react"
+import { VSCodeDropdown, VSCodeLink, VSCodeOption } from "@vscode/webview-ui-toolkit/react"
 import { Fragment, memo, useCallback, useMemo, useState } from "react"
 import { useEvent } from "react-use"
 import {
@@ -16,10 +12,7 @@ import {
 	openAiNativeModels,
 } from "../../../../src/shared/api"
 import { useExtensionState } from "../../context/ExtensionStateContext"
-import  {
-	ModelDescriptionMarkdown,
-	OPENROUTER_MODEL_PICKER_Z_INDEX,
-} from "./OpenRouterModelPicker"
+import { ModelDescriptionMarkdown, OPENROUTER_MODEL_PICKER_Z_INDEX } from "./OpenRouterModelPicker"
 import { vscode } from "../../utils/vscode"
 import VSCodeButtonLink from "../common/VSCodeButtonLink"
 import OpenRouterModelPicker, { ModelDescriptionMarkdown } from "./OpenRouterModelPicker"
