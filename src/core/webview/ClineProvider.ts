@@ -26,6 +26,7 @@ import { AutoApprovalSettings, DEFAULT_AUTO_APPROVAL_SETTINGS } from "../../shar
 import { IAuthorizationFlowCallbackQuery } from "../../services/robodev/interfaces/authorization-flow-callback.query.interface"
 import { IUser } from "../../services/robodev/interfaces/user.interface"
 import { RobodevLoginClient } from "../../services/robodev/login/robodev-login.client"
+import { RobodevOrganizationClient } from "../../services/robodev/organization/robodev-organization.client"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -89,6 +90,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	mcpHub?: McpHub
 	private latestAnnouncementId = "dec-17-2024" // update to some unique identifier when we add a new announcement
 	private robodevLoginClient: RobodevLoginClient
+	private robodevOrganizationClient: RobodevOrganizationClient
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -99,6 +101,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.mcpHub = new McpHub(this)
 		this.robodevLoginClient = new RobodevLoginClient()
+		this.robodevOrganizationClient = new RobodevOrganizationClient()
 	}
 
 	/*
@@ -383,6 +386,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "apiConfiguration":
 						if (message.apiConfiguration) {
+							const [anthropicKey, openAIKey] = await this.getOrganizationKeys()
+
 							const {
 								apiProvider,
 								apiModelId,
@@ -396,7 +401,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								vertexProjectId,
 								vertexRegion,
 								openAiBaseUrl,
-								openAiApiKey,
 								openAiModelId,
 								ollamaModelId,
 								ollamaBaseUrl,
@@ -404,14 +408,13 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								lmStudioBaseUrl,
 								anthropicBaseUrl,
 								geminiApiKey,
-								openAiNativeApiKey,
 								azureApiVersion,
 								openRouterModelId,
 								openRouterModelInfo,
 							} = message.apiConfiguration
 							await this.updateGlobalState("apiProvider", apiProvider)
 							await this.updateGlobalState("apiModelId", apiModelId)
-							await this.storeSecret("apiKey", apiKey)
+							await this.storeSecret("apiKey", anthropicKey)
 							await this.storeSecret("openRouterApiKey", openRouterApiKey)
 							await this.storeSecret("awsAccessKey", awsAccessKey)
 							await this.storeSecret("awsSecretKey", awsSecretKey)
@@ -421,7 +424,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("vertexProjectId", vertexProjectId)
 							await this.updateGlobalState("vertexRegion", vertexRegion)
 							await this.updateGlobalState("openAiBaseUrl", openAiBaseUrl)
-							await this.storeSecret("openAiApiKey", openAiApiKey)
+							await this.storeSecret("openAiApiKey", openAIKey)
 							await this.updateGlobalState("openAiModelId", openAiModelId)
 							await this.updateGlobalState("ollamaModelId", ollamaModelId)
 							await this.updateGlobalState("ollamaBaseUrl", ollamaBaseUrl)
@@ -429,7 +432,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("lmStudioBaseUrl", lmStudioBaseUrl)
 							await this.updateGlobalState("anthropicBaseUrl", anthropicBaseUrl)
 							await this.storeSecret("geminiApiKey", geminiApiKey)
-							await this.storeSecret("openAiNativeApiKey", openAiNativeApiKey)
+							await this.storeSecret("openAiNativeApiKey", openAIKey)
 							await this.updateGlobalState("azureApiVersion", azureApiVersion)
 							await this.updateGlobalState("openRouterModelId", openRouterModelId)
 							await this.updateGlobalState("openRouterModelInfo", openRouterModelInfo)
@@ -1143,5 +1146,25 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		await this.updateGlobalState("refreshToken", data.refreshToken)
 		await this.updateGlobalState("user", user)
 		await this.postStateToWebview()
+	}
+
+	private async getOrganizationKeys() {
+		const accessToken = (await this.getGlobalState("accessToken")) as string
+
+		const paginatedOrganizations = await this.robodevOrganizationClient.getUserOrganizations(accessToken)
+
+		const firstOrganization = paginatedOrganizations.items[0]
+
+		if (!firstOrganization) {
+			return [undefined, undefined]
+		}
+
+		const organization = await this.robodevOrganizationClient.getOrganizationById(accessToken, firstOrganization.id)
+
+		const anthropicKey = organization?.keys?.find((data) => data.provider === "ANTHROPIC")?.key
+
+		const openAIKey = organization?.keys?.find((data) => data.provider === "OPENAI")?.key
+
+		return [anthropicKey, openAIKey]
 	}
 }
