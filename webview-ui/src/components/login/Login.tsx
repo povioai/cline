@@ -1,9 +1,37 @@
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { vscode } from "../../utils/vscode"
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+import styled from "styled-components"
+
+const GoogleButton = styled.button`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	background-color: #000;
+	color: #fff;
+	font-weight: 500;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 8px;
+	padding: 12px 24px;
+	font-size: 16px;
+	cursor: pointer;
+	transition:
+		background-color 0.3s,
+		border-color 0.3s;
+
+	&:hover {
+		background-color: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.5);
+	}
+
+	svg {
+		width: 20px;
+		height: 20px;
+	}
+`
 
 const Login = () => {
-	const { isSignedIn, setIsSignedIn } = useExtensionState()
+	const { isSignedIn } = useExtensionState()
 
 	const handleLogin = () => {
 		vscode.postMessage({ type: "googleLogin", text: "login", isSignedIn: isSignedIn })
@@ -15,7 +43,7 @@ const Login = () => {
 
 			{!isSignedIn && (
 				<div>
-					<VSCodeButton onClick={handleLogin}>
+					<GoogleButton onClick={handleLogin}>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							width="800px"
@@ -43,8 +71,8 @@ const Login = () => {
 							<polygon fill="#2ab2db" points="8.718 18.626 8.718 18.626 8.718 18.626 8.718 18.626" />
 							<path d="M29.25,15v1L27,19.5H16.5V14H28.25A1,1,0,0,1,29.25,15Z" fill="#4285f4" />
 						</svg>
-						Login with Google
-					</VSCodeButton>
+						Continue with Google
+					</GoogleButton>
 				</div>
 			)}
 		</div>
