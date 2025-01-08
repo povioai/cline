@@ -28,6 +28,7 @@ import { IUser } from "../../services/robodev/interfaces/user.interface"
 import { RobodevAuthService } from "../../services/robodev/auth/robodev-auth.service"
 import { GlobalStateKey, SecretKey } from "../../services/context-storage/context-storage.service"
 import { RobodevOrganizationService } from "../../services/robodev/organization/robodev-organization.service"
+import { UserNotPartOfAnyOrganizationError } from "../../shared/errors"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -301,6 +302,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					}
 					case "webviewDidLaunch":
+						await this.updateGlobalState("userErrors", undefined)
 						this.postStateToWebview()
 						this.workspaceTracker?.initializeFilePaths() // don't await
 						getTheme().then((theme) =>
@@ -823,6 +825,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			taskHistory,
 			autoApprovalSettings,
 			user,
+			userErrors,
+			isSignInLoading,
 		} = await this.getState()
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -835,6 +839,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			autoApprovalSettings,
 			isSignedIn,
 			user,
+			userErrors,
+			isSignInLoading,
 		}
 	}
 
@@ -921,6 +927,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			autoApprovalSettings,
 			isSignedIn,
 			user,
+			userErrors,
+			isSignInLoading,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -952,6 +960,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("autoApprovalSettings") as Promise<AutoApprovalSettings | undefined>,
 			this.getGlobalState("isSignedIn") as Promise<boolean>,
 			this.getGlobalState("user") as Promise<IUser | undefined>,
+			this.getGlobalState("userErrors") as Promise<any[] | undefined>,
+			this.getGlobalState("isSignInLoading") as Promise<boolean>,
 		])
 
 		let apiProvider: ApiProvider
@@ -1001,6 +1011,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			autoApprovalSettings: autoApprovalSettings || DEFAULT_AUTO_APPROVAL_SETTINGS, // default value can be 0 or empty string
 			isSignedIn: isSignedIn,
 			user: user,
+			userErrors: userErrors,
+			isSignInLoading: isSignInLoading,
 		}
 	}
 
@@ -1098,6 +1110,20 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async handleAuthorizationFlowCallback(data: IAuthorizationFlowCallbackQuery) {
 		await this.robodevAuthService.handleAuthorizationFlowCallback(data)
+
+		try {
+			await this.robodevOrganizationService.getOrganizationKeys()
+		} catch (e) {
+			if (e instanceof UserNotPartOfAnyOrganizationError) {
+				await this.updateGlobalState("isSignedIn", false)
+				const userErrors = ((await this.getGlobalState("userErrors")) as []) || []
+				await this.updateGlobalState("userErrors", [
+					...userErrors,
+					{ message: e.message, code: UserNotPartOfAnyOrganizationError.code },
+				])
+			}
+		}
+		await this.updateGlobalState("isSignInLoading", false)
 		await this.postStateToWebview()
 	}
 }

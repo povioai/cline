@@ -1,5 +1,6 @@
 import { RobodevOrganizationClient } from "./robodev-organization.client"
 import { RobodevOrganizationKeys } from "./robodev-organization.types"
+import { UserNotPartOfAnyOrganizationError } from "../../../shared/errors"
 
 export class RobodevOrganizationService {
 	private readonly robodevOrganizationClient: RobodevOrganizationClient
@@ -11,11 +12,11 @@ export class RobodevOrganizationService {
 	async getOrganizationKeys(): Promise<RobodevOrganizationKeys> {
 		const paginatedOrganizations = await this.robodevOrganizationClient.getUserOrganizations()
 
-		const firstOrganization = paginatedOrganizations.items[0]
-
-		if (!firstOrganization) {
-			return {}
+		if (paginatedOrganizations.items.length === 0) {
+			throw new UserNotPartOfAnyOrganizationError()
 		}
+
+		const firstOrganization = paginatedOrganizations.items[0]
 
 		const organization = await this.robodevOrganizationClient.getOrganizationById(firstOrganization.id)
 

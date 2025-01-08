@@ -48,6 +48,8 @@ export interface ExtensionState {
 	autoApprovalSettings: AutoApprovalSettings
 	isSignedIn: boolean
 	user?: { name: string; email: string }
+	userErrors?: { message: string; code: string }[]
+	isSignInLoading?: boolean
 }
 
 export interface ClineMessage {
