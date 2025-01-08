@@ -164,18 +164,18 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			case "/auth/callback": {
 				const accessToken = query.get("accessToken")
-				const refreshToken = query.get("refreshToken")
-				const idToken = query.get("idToken")
 
-				if (!accessToken || !refreshToken || !idToken) {
+				if (!accessToken) {
 					vscode.window.showErrorMessage("Failed to login")
 					return
 				}
 
 				const data: IAuthorizationFlowCallbackQuery = {
 					accessToken: accessToken!,
-					refreshToken: refreshToken!,
-					idToken: idToken!,
+					refreshToken: query.get("refreshToken") ?? undefined,
+					idToken: query.get("idToken") ?? undefined,
+					email: query.get("email") ?? undefined,
+					name: query.get("name") ?? undefined,
 				}
 
 				await visibleProvider.handleAuthorizationFlowCallback(data)

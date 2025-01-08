@@ -30,12 +30,21 @@ export class RobodevAuthClient {
 	}
 
 	async registerGoogleUser(token: string, data: UserRegisterRequest): Promise<void> {
-		await robodevRestClient.post(
-			{
-				resSchema: userMeResponseSchema,
-			},
-			"/user/register/google",
-			data,
-		)
+		try {
+			await robodevRestClient.post(
+				{
+					resSchema: userMeResponseSchema,
+				},
+				"/user/register/google",
+				data,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				},
+			)
+		} catch (e) {
+			return
+		}
 	}
 }

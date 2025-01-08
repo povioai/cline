@@ -53,7 +53,7 @@ import { constructNewFileContent } from "./assistant-message/diff"
 import { parseMentions } from "./mentions"
 import { formatResponse } from "./prompts/responses"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
-import { RobodevUsageLogClient } from "../services/robodev/usage-logs/robodev-usage-log.client"
+import { RobodevUsageLogService } from "../services/robodev/usage-logs/robodev-usage-log.service"
 import { OpenRouterHandler } from "../api/providers/openrouter"
 import { getNextTruncationRange, getTruncatedMessages } from "./sliding-window"
 import { SYSTEM_PROMPT } from "./prompts/system"
@@ -114,7 +114,7 @@ export class Cline {
 	private didCompleteReadingStream = false
 	private didAutomaticallyRetryFailedApiRequest = false
 	private apiConfiguration: ApiConfiguration
-	private usageLogRobodevClient: RobodevUsageLogClient
+	private robodevUsageLogService: RobodevUsageLogService
 
 	constructor(
 		provider: ClineProvider,
@@ -140,7 +140,7 @@ export class Cline {
 		this.chatSettings = chatSettings
 		this.isSignedIn = isSignedIn
 		this.apiConfiguration = apiConfiguration
-		this.usageLogRobodevClient = new RobodevUsageLogClient()
+		this.robodevUsageLogService = new RobodevUsageLogService()
 		if (historyItem) {
 			this.taskId = historyItem.id
 			this.conversationHistoryDeletedRange = historyItem.conversationHistoryDeletedRange
@@ -1285,7 +1285,7 @@ export class Cline {
 		)
 
 		let stream = this.api.createMessage(systemPrompt, truncatedConversationHistory)
-		await this.usageLogRobodevClient.createUsageLog({
+		await this.robodevUsageLogService.createUsageLog({
 			message: JSON.stringify(this.apiConversationHistory),
 			customInstructions: settingsCustomInstructions ?? "",
 			llmModel: this.api.getModel().id,

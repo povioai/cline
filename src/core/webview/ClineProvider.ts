@@ -27,11 +27,9 @@ import { BrowserSettings, DEFAULT_BROWSER_SETTINGS } from "../../shared/BrowserS
 import { ChatSettings, DEFAULT_CHAT_SETTINGS } from "../../shared/ChatSettings"
 import { IAuthorizationFlowCallbackQuery } from "../../services/robodev/interfaces/authorization-flow-callback.query.interface"
 import { IUser } from "../../services/robodev/interfaces/user.interface"
-import { RobodevAuthClient } from "../../services/robodev/auth/robodev-auth.client"
-import { RobodevOrganizationClient } from "../../services/robodev/organization/robodev-organization.client"
-import { robodevRestClient } from "../../services/robodev/robodev-rest.client"
-import { AuthorizationHeaderInterceptor } from "../../utils/rest/interceptors/authorization-header.interceptor"
-import { TokenExpiredInterceptor } from "../../utils/rest/interceptors/token-expired.interceptor"
+import { RobodevAuthService } from "../../services/robodev/auth/robodev-auth.service"
+import { GlobalStateKey, SecretKey } from "../../services/context-storage/context-storage.service"
+import { RobodevOrganizationService } from "../../services/robodev/organization/robodev-organization.service"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -99,8 +97,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private workspaceTracker?: WorkspaceTracker
 	mcpHub?: McpHub
 	private latestAnnouncementId = "jan-20-2025" // update to some unique identifier when we add a new announcement
-	private robodevLoginClient: RobodevAuthClient
-	private robodevOrganizationClient: RobodevOrganizationClient
+	private readonly robodevAuthService: RobodevAuthService
+	private readonly robodevOrganizationService: RobodevOrganizationService
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -110,8 +108,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		ClineProvider.activeInstances.add(this)
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.mcpHub = new McpHub(this)
-		this.robodevLoginClient = new RobodevAuthClient()
-		this.robodevOrganizationClient = new RobodevOrganizationClient()
+		this.robodevAuthService = new RobodevAuthService(context)
+		this.robodevOrganizationService = new RobodevOrganizationService()
 	}
 
 	/*
@@ -356,8 +354,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			async (message: WebviewMessage) => {
 				switch (message.type) {
 					case "googleLogin": {
-						const url = await this.robodevLoginClient.getLoginUrl()
-						vscode.env.openExternal(vscode.Uri.parse(url))
+						await this.robodevAuthService.openGoogleAuthFlow()
 						break
 					}
 					case "googleLogout": {
@@ -412,7 +409,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "apiConfiguration":
 						if (message.apiConfiguration) {
-							const [anthropicKey, openAIKey] = await this.getOrganizationKeys()
+							const { anthropicKey, openaiKey } =
+								await this.robodevOrganizationService.getOrganizationKeys()
 
 							const {
 								apiProvider,
@@ -454,7 +452,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("vertexProjectId", vertexProjectId)
 							await this.updateGlobalState("vertexRegion", vertexRegion)
 							await this.updateGlobalState("openAiBaseUrl", openAiBaseUrl)
-							await this.storeSecret("openAiApiKey", openAIKey)
+							await this.storeSecret("openAiApiKey", openaiKey)
 							await this.updateGlobalState("openAiModelId", openAiModelId)
 							await this.updateGlobalState("ollamaModelId", ollamaModelId)
 							await this.updateGlobalState("ollamaBaseUrl", ollamaBaseUrl)
@@ -462,7 +460,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("lmStudioBaseUrl", lmStudioBaseUrl)
 							await this.updateGlobalState("anthropicBaseUrl", anthropicBaseUrl)
 							await this.storeSecret("geminiApiKey", geminiApiKey)
-							await this.storeSecret("openAiNativeApiKey", openAIKey)
+							await this.storeSecret("openAiNativeApiKey", openaiKey)
 							await this.storeSecret("deepSeekApiKey", deepSeekApiKey)
 							await this.storeSecret("mistralApiKey", mistralApiKey)
 							await this.updateGlobalState("azureApiVersion", azureApiVersion)
@@ -1334,56 +1332,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	private async logout() {
-		await this.updateGlobalState("isSignedIn", false)
-		await this.updateGlobalState("accessToken", undefined)
-		await this.updateGlobalState("refreshToken", undefined)
-		await this.updateGlobalState("idToken", undefined)
+		await this.robodevAuthService.logout()
 		await this.postStateToWebview()
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		vscode.window.showInformationMessage("Logged out successfully")
 	}
 
 	async handleAuthorizationFlowCallback(data: IAuthorizationFlowCallbackQuery) {
-		const user = await this.robodevLoginClient.getUsersMe(data.accessToken)
-
-		if (!user) {
-			return
-		}
-
-		vscode.window.showInformationMessage("Logged in successfully")
-
-		await this.updateGlobalState("isSignedIn", true)
-		await this.updateGlobalState("accessToken", data.accessToken)
-		await this.updateGlobalState("refreshToken", data.refreshToken)
-		await this.updateGlobalState("user", user)
+		await this.robodevAuthService.handleAuthorizationFlowCallback(data)
 		await this.postStateToWebview()
-
-		robodevRestClient.attachInterceptor(AuthorizationHeaderInterceptor, async () => {
-			const accessToken = await this.getGlobalState("accessToken")
-
-			return accessToken ? `Bearer ${accessToken}` : null
-		})
-
-		robodevRestClient.attachInterceptor(TokenExpiredInterceptor, async () => {
-			await this.logout()
-		})
-	}
-
-	private async getOrganizationKeys() {
-		const paginatedOrganizations = await this.robodevOrganizationClient.getUserOrganizations()
-
-		const firstOrganization = paginatedOrganizations.items[0]
-
-		if (!firstOrganization) {
-			return [undefined, undefined]
-		}
-
-		const organization = await this.robodevOrganizationClient.getOrganizationById(firstOrganization.id)
-
-		const anthropicKey = organization?.keys?.find((data) => data.provider === "ANTHROPIC")?.key
-
-		const openAIKey = organization?.keys?.find((data) => data.provider === "OPENAI")?.key
-
-		return [anthropicKey, openAIKey]
 	}
 }
