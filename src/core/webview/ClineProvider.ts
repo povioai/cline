@@ -184,7 +184,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async initClineWithHistoryItem(historyItem: HistoryItem) {
 		await this.clearTask()
-		const { apiConfiguration, customInstructions, autoApprovalSettings, isSignedIn } = await this.getState()
+		const { apiConfiguration, customInstructions, autoApprovalSettings } = await this.getState()
 		this.cline = new Cline(
 			this,
 			apiConfiguration,
@@ -193,7 +193,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			undefined,
 			undefined,
 			historyItem,
-			isSignedIn,
 		)
 	}
 

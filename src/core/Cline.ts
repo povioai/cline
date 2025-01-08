@@ -68,7 +68,6 @@ export class Cline {
 	private browserSession: BrowserSession
 	private didEditFile: boolean = false
 	customInstructions?: string
-	isSignedIn: boolean
 	autoApprovalSettings: AutoApprovalSettings
 	apiConversationHistory: Anthropic.MessageParam[] = []
 	clineMessages: ClineMessage[] = []
@@ -105,7 +104,6 @@ export class Cline {
 		task?: string,
 		images?: string[],
 		historyItem?: HistoryItem,
-		isSignedIn: boolean = false,
 	) {
 		this.providerRef = new WeakRef(provider)
 		this.api = buildApiHandler(apiConfiguration)
@@ -115,7 +113,6 @@ export class Cline {
 		this.diffViewProvider = new DiffViewProvider(cwd)
 		this.customInstructions = customInstructions
 		this.autoApprovalSettings = autoApprovalSettings
-		this.isSignedIn = isSignedIn
 		this.apiConfiguration = apiConfiguration
 		this.robodevUsageLogService = new RobodevUsageLogService()
 		if (historyItem) {
