@@ -21,6 +21,7 @@ interface ExtensionStateContextType extends ExtensionState {
 	setCustomInstructions: (value?: string) => void
 	setShowAnnouncement: (value: boolean) => void
 	setIsSignedIn: (value: boolean) => void
+	setIsSignInLoading: (value: boolean) => void
 }
 
 const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -37,6 +38,8 @@ export const ExtensionStateContextProvider: React.FC<{
 		isSignedIn: false,
 		browserSettings: DEFAULT_BROWSER_SETTINGS,
 		chatSettings: DEFAULT_CHAT_SETTINGS,
+		isSignInLoading: false,
+		userErrors: undefined,
 	})
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)
@@ -142,6 +145,7 @@ export const ExtensionStateContextProvider: React.FC<{
 				shouldShowAnnouncement: value,
 			})),
 		setIsSignedIn: (value: boolean) => setState((prevState) => ({ ...prevState, isSignedIn: value })),
+		setIsSignInLoading: (value: boolean) => setState((prevState) => ({ ...prevState, isSignInLoading: value })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

@@ -5,6 +5,7 @@ import { robodevRestClient } from "../robodev-rest.client"
 import { AuthorizationHeaderInterceptor } from "../../../utils/rest/interceptors/authorization-header.interceptor"
 import { TokenExpiredInterceptor } from "../../../utils/rest/interceptors/token-expired.interceptor"
 import { ContextStorageService } from "../../context-storage/context-storage.service"
+import { IUser } from "../interfaces/user.interface"
 
 export class RobodevAuthService {
 	private readonly contextStorageService: ContextStorageService
@@ -21,14 +22,20 @@ export class RobodevAuthService {
 	}
 
 	async handleAuthorizationFlowCallback(data: IAuthorizationFlowCallbackQuery) {
-		if (data.email && data.name) {
-			await this.robodevLoginClient.registerGoogleUser(data.accessToken, {
-				email: data.email,
-				name: data.name,
-			})
-		}
+		let user: IUser | undefined
 
-		const user = await this.robodevLoginClient.getUsersMe(data.accessToken)
+		try {
+			user = await this.robodevLoginClient.getUsersMe(data.accessToken)
+		} catch (error) {
+			if (data.email && data.name) {
+				await this.robodevLoginClient.registerGoogleUser(data.accessToken, {
+					email: data.email,
+					name: data.name,
+				})
+			}
+
+			user = await this.robodevLoginClient.getUsersMe(data.accessToken)
+		}
 
 		if (!user) {
 			return

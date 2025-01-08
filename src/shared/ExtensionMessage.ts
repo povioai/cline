@@ -53,6 +53,8 @@ export interface ExtensionState {
 	chatSettings: ChatSettings
 	isSignedIn: boolean
 	user?: { name: string; email: string }
+	userErrors?: { message: string; code: string }[]
+	isSignInLoading?: boolean
 }
 
 export interface ClineMessage {
