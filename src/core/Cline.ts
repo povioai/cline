@@ -76,7 +76,6 @@ export class Cline {
 	browserSession: BrowserSession
 	private didEditFile: boolean = false
 	customInstructions?: string
-	isSignedIn: boolean
 	autoApprovalSettings: AutoApprovalSettings
 	private browserSettings: BrowserSettings
 	private chatSettings: ChatSettings
@@ -126,7 +125,6 @@ export class Cline {
 		task?: string,
 		images?: string[],
 		historyItem?: HistoryItem,
-		isSignedIn: boolean = false,
 	) {
 		this.providerRef = new WeakRef(provider)
 		this.api = buildApiHandler(apiConfiguration)

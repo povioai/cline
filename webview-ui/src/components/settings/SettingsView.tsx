@@ -1,7 +1,6 @@
 import { VSCodeButton, VSCodeLink, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react"
 import { memo, useEffect, useState } from "react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
-import { validateApiConfiguration, validateModelId } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
 import ApiOptions from "./ApiOptions"
 
@@ -17,20 +16,9 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
 
 	const handleSubmit = () => {
-		const apiValidationResult = undefined // validateApiConfiguration(apiConfiguration)
-		const modelIdValidationResult = undefined // validateModelId(apiConfiguration, openRouterModels)
-
-		setApiErrorMessage(apiValidationResult)
-		setModelIdErrorMessage(modelIdValidationResult)
-
-		if (!apiValidationResult && !modelIdValidationResult) {
-			vscode.postMessage({ type: "apiConfiguration", apiConfiguration })
-			vscode.postMessage({
-				type: "customInstructions",
-				text: customInstructions,
-			})
-			onDone()
-		}
+		vscode.postMessage({ type: "apiConfiguration", apiConfiguration })
+		vscode.postMessage({ type: "customInstructions", text: customInstructions })
+		onDone()
 	}
 
 	const handleLogOut = () => {
