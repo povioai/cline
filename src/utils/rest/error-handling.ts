@@ -102,7 +102,6 @@ export class ErrorHandler<CodeT extends string> {
 		const errorEntry = this.entries.find((entry) => entry.condition(error ?? {}))!
 
 		const serverMessage = extractServerErrorMessage(error)
-		vscode.window.showErrorMessage(serverMessage ?? errorEntry.getMessage(error))
 		throw new ApplicationException(errorEntry.getMessage(error), errorEntry.code, serverMessage)
 	}
 

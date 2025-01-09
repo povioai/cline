@@ -5,6 +5,7 @@ import { UserNotPartOfAnyOrganizationError } from "../../../../src/shared/errors
 const ErrorMessage = styled.div`
 	color: red;
 	font-size: 16px;
+	margin-top: 12px;
 	margin-bottom: 12px;
 `
 

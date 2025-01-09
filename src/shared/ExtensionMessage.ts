@@ -6,6 +6,7 @@ import { BrowserSettings } from "./BrowserSettings"
 import { ChatSettings } from "./ChatSettings"
 import { HistoryItem } from "./HistoryItem"
 import { McpServer } from "./mcp"
+import { UserError } from "./errors"
 
 // webview will hold state
 export interface ExtensionMessage {
@@ -53,7 +54,7 @@ export interface ExtensionState {
 	chatSettings: ChatSettings
 	isSignedIn: boolean
 	user?: { name: string; email: string }
-	userErrors?: { message: string; code: string }[]
+	userErrors?: UserError[]
 	isSignInLoading?: boolean
 }
 

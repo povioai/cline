@@ -138,7 +138,7 @@ export class Cline {
 		this.chatSettings = chatSettings
 		this.isSignedIn = isSignedIn
 		this.apiConfiguration = apiConfiguration
-		this.robodevUsageLogService = new RobodevUsageLogService()
+		this.robodevUsageLogService = new RobodevUsageLogService(provider.context)
 		if (historyItem) {
 			this.taskId = historyItem.id
 			this.conversationHistoryDeletedRange = historyItem.conversationHistoryDeletedRange
@@ -1290,6 +1290,7 @@ export class Cline {
 			llmProvider: this.apiConfiguration.apiProvider ?? "Unknown",
 			tokens: 0,
 			images: this.getImagesFromMessageHistory(this.apiConversationHistory),
+			projectName: "Project Name",
 		})
 
 		const iterator = stream[Symbol.asyncIterator]()

@@ -1,11 +1,15 @@
 import { RobodevOrganizationClient } from "./robodev-organization.client"
 import { RobodevOrganizationKeys } from "./robodev-organization.types"
 import { UserNotPartOfAnyOrganizationError } from "../../../shared/errors"
+import { ContextStorageService } from "../../context-storage/context-storage.service"
+import vscode from "vscode"
 
 export class RobodevOrganizationService {
+	private readonly contextStorageService: ContextStorageService
 	private readonly robodevOrganizationClient: RobodevOrganizationClient
 
-	constructor() {
+	constructor(context: vscode.ExtensionContext) {
+		this.contextStorageService = new ContextStorageService(context)
 		this.robodevOrganizationClient = new RobodevOrganizationClient()
 	}
 
@@ -17,6 +21,8 @@ export class RobodevOrganizationService {
 		}
 
 		const firstOrganization = paginatedOrganizations.items[0]
+
+		await this.contextStorageService.updateGlobalState("currentOrganizationId", firstOrganization.id)
 
 		const organization = await this.robodevOrganizationClient.getOrganizationById(firstOrganization.id)
 

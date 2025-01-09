@@ -28,20 +28,16 @@ export class RobodevAuthService {
 			user = await this.robodevLoginClient.getUsersMe(data.accessToken)
 		} catch (error) {
 			if (data.email && data.name) {
-				await this.robodevLoginClient.registerGoogleUser(data.accessToken, {
+				user = await this.robodevLoginClient.registerGoogleUser(data.accessToken, {
 					email: data.email,
 					name: data.name,
 				})
 			}
-
-			user = await this.robodevLoginClient.getUsersMe(data.accessToken)
 		}
 
 		if (!user) {
 			return
 		}
-
-		vscode.window.showInformationMessage("Logged in successfully")
 
 		await this.contextStorageService.updateGlobalState("isSignedIn", true)
 		await this.contextStorageService.updateGlobalState("accessToken", data.accessToken)
@@ -64,5 +60,7 @@ export class RobodevAuthService {
 		await this.contextStorageService.updateGlobalState("accessToken", undefined)
 		await this.contextStorageService.updateGlobalState("refreshToken", undefined)
 		await this.contextStorageService.updateGlobalState("idToken", undefined)
+		await this.contextStorageService.updateGlobalState("user", undefined)
+		await this.contextStorageService.updateGlobalState("userErrors", undefined)
 	}
 }

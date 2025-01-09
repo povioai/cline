@@ -7,6 +7,7 @@ export const usageLogRequestSchema = z.object({
 	customInstructions: z.string(),
 	llmProvider: z.string(),
 	llmModel: z.string(),
+	projectName: z.string(),
 })
 
 export type UsageLogRequest = z.infer<typeof usageLogRequestSchema>

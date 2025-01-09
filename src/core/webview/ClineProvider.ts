@@ -30,7 +30,7 @@ import { IUser } from "../../services/robodev/interfaces/user.interface"
 import { RobodevAuthService } from "../../services/robodev/auth/robodev-auth.service"
 import { GlobalStateKey, SecretKey } from "../../services/context-storage/context-storage.service"
 import { RobodevOrganizationService } from "../../services/robodev/organization/robodev-organization.service"
-import { UserNotPartOfAnyOrganizationError } from "../../shared/errors"
+import { UserError, UserNotPartOfAnyOrganizationError } from "../../shared/errors"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -110,7 +110,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.workspaceTracker = new WorkspaceTracker(this)
 		this.mcpHub = new McpHub(this)
 		this.robodevAuthService = new RobodevAuthService(context)
-		this.robodevOrganizationService = new RobodevOrganizationService()
+		this.robodevOrganizationService = new RobodevOrganizationService(context)
 	}
 
 	/*
@@ -1191,7 +1191,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("vsCodeLmModelSelector") as Promise<vscode.LanguageModelChatSelector | undefined>,
 			this.getGlobalState("isSignedIn") as Promise<boolean>,
 			this.getGlobalState("user") as Promise<IUser | undefined>,
-			this.getGlobalState("userErrors") as Promise<any[] | undefined>,
+			this.getGlobalState("userErrors") as Promise<UserError[] | undefined>,
 			this.getGlobalState("isSignInLoading") as Promise<boolean>,
 		])
 
@@ -1354,10 +1354,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 		try {
 			await this.robodevOrganizationService.getOrganizationKeys()
+			vscode.window.showInformationMessage("Logged in successfully")
 		} catch (e) {
 			if (e instanceof UserNotPartOfAnyOrganizationError) {
-				await this.updateGlobalState("isSignedIn", false)
-				const userErrors = ((await this.getGlobalState("userErrors")) as []) || []
+				const userErrors = ((await this.getGlobalState("userErrors")) as UserError[]) || []
+				await this.robodevAuthService.logout()
 				await this.updateGlobalState("userErrors", [
 					...userErrors,
 					{ message: e.message, code: UserNotPartOfAnyOrganizationError.code },
