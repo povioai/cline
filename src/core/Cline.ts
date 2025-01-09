@@ -60,6 +60,7 @@ import { SYSTEM_PROMPT } from "./prompts/system"
 import { addUserInstructions } from "./prompts/system"
 import { OpenAiHandler } from "../api/providers/openai"
 import { ApiStream } from "../api/transform/stream"
+import { getProjectName } from "../utils/project-name.util"
 
 const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
 
@@ -1290,7 +1291,7 @@ export class Cline {
 			llmProvider: this.apiConfiguration.apiProvider ?? "Unknown",
 			tokens: 0,
 			images: this.getImagesFromMessageHistory(this.apiConversationHistory),
-			projectName: "Project Name",
+			projectName: getProjectName(),
 		})
 
 		const iterator = stream[Symbol.asyncIterator]()
