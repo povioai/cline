@@ -114,7 +114,7 @@ export class Cline {
 		this.customInstructions = customInstructions
 		this.autoApprovalSettings = autoApprovalSettings
 		this.apiConfiguration = apiConfiguration
-		this.robodevUsageLogService = new RobodevUsageLogService()
+		this.robodevUsageLogService = new RobodevUsageLogService(provider.context)
 		if (historyItem) {
 			this.taskId = historyItem.id
 			this.resumeTaskFromHistory()
@@ -851,6 +851,7 @@ export class Cline {
 			llmProvider: this.apiConfiguration.apiProvider ?? "Unknown",
 			tokens: 0,
 			images: this.getImagesFromMessageHistory(this.apiConversationHistory),
+			projectName: "Project Name",
 		})
 
 		const iterator = stream[Symbol.asyncIterator]()
