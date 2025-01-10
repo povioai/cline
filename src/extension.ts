@@ -45,7 +45,10 @@ export function activate(context: vscode.ExtensionContext) {
 			outputChannel.appendLine("Plus button Clicked")
 			await sidebarProvider.clearTask()
 			await sidebarProvider.postStateToWebview()
-			await sidebarProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+			await sidebarProvider.postMessageToWebview({
+				type: "action",
+				action: "chatButtonClicked",
+			})
 		}),
 	)
 
@@ -56,7 +59,10 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showInformationMessage("Please sign in first")
 				return
 			}
-			sidebarProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
+			sidebarProvider.postMessageToWebview({
+				type: "action",
+				action: "mcpButtonClicked",
+			})
 		}),
 	)
 
@@ -115,7 +121,10 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showInformationMessage("Please sign in first")
 				return
 			}
-			sidebarProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
+			sidebarProvider.postMessageToWebview({
+				type: "action",
+				action: "historyButtonClicked",
+			})
 		}),
 	)
 
@@ -131,9 +140,7 @@ export function activate(context: vscode.ExtensionContext) {
 			return Buffer.from(uri.query, "base64").toString("utf-8")
 		}
 	})()
-	context.subscriptions.push(
-		vscode.workspace.registerTextDocumentContentProvider(DIFF_VIEW_URI_SCHEME, diffContentProvider),
-	)
+	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(DIFF_VIEW_URI_SCHEME, diffContentProvider))
 
 	// URI Handler
 	const handleUri = async (uri: vscode.Uri) => {
