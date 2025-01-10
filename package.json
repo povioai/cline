@@ -1,5 +1,5 @@
 {
-	"name": "claude-dev",
+	"name": "povioai",
 	"displayName": "Robodev",
 	"description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
 	"version": "3.0.4",
@@ -15,12 +15,12 @@
 		"name": "Robodev"
 	},
 	"license": "Apache-2.0",
-	"publisher": "x",
+	"publisher": "robodev",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/cline/cline"
+		"url": "https://github.com/povioai/cline"
 	},
-	"homepage": "https://cline.bot",
+	"homepage": "https://www.robodev.com/",
 	"categories": [
 		"AI",
 		"Chat",
@@ -51,7 +51,7 @@
 				{
 					"id": "claude-dev-ActivityBar",
 					"title": "Robodev",
-					"icon": "assets/icons/img_2.png"
+					"icon": "assets/icons/robodev_dark.png"
 				}
 			]
 		},

@@ -83,8 +83,8 @@ export function activate(context: vscode.ExtensionContext) {
 		// TODO: use better svg icon with light and dark variants (see https://stackoverflow.com/questions/58365687/vscode-extension-iconpath)
 
 		panel.iconPath = {
-			light: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "img_2.png"),
-			dark: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "img_2.png"),
+			light: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "robodev_light.png"),
+			dark: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "robodev_dark.png"),
 		}
 		tabProvider.resolveWebviewView(panel)
 
