@@ -14,6 +14,8 @@ export const organizationResponseSchema = z.object({
 	keys: z.array(organizationKeyResponseSchema).optional(),
 })
 
+export const paginateOrganizationKeysResponseSchema = createPaginatedSchema(organizationKeyResponseSchema)
+
 export const paginatedOrganizationResponseSchema = createPaginatedSchema(organizationResponseSchema)
 
 export type OrganizationResponseDTO = z.infer<typeof organizationResponseSchema>

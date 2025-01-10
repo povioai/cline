@@ -24,11 +24,11 @@ export class RobodevOrganizationService {
 
 		await this.contextStorageService.updateGlobalState("currentOrganizationId", firstOrganization.id)
 
-		const organization = await this.robodevOrganizationClient.getOrganizationById(firstOrganization.id)
+		const data = await this.robodevOrganizationClient.getOrganizationKeys(firstOrganization.id)
 
-		const anthropicKey = organization?.keys?.find((data) => data.provider === "ANTHROPIC")?.key
+		const anthropicKey = data?.items?.find((data) => data.provider === "ANTHROPIC")?.key
 
-		const openaiKey = organization?.keys?.find((data) => data.provider === "OPENAI")?.key
+		const openaiKey = data?.items?.find((data) => data.provider === "OPENAI")?.key
 
 		return {
 			anthropicKey,

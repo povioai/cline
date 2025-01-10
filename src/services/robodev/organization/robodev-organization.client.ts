@@ -1,4 +1,8 @@
-import { organizationResponseSchema, paginatedOrganizationResponseSchema } from "./robodev-organization.models"
+import {
+	organizationResponseSchema,
+	paginatedOrganizationResponseSchema,
+	paginateOrganizationKeysResponseSchema,
+} from "./robodev-organization.models"
 import { robodevRestClient } from "../robodev-rest.client"
 
 export class RobodevOrganizationClient {
@@ -8,5 +12,12 @@ export class RobodevOrganizationClient {
 
 	async getOrganizationById(organizationId: string) {
 		return robodevRestClient.get({ resSchema: organizationResponseSchema }, `/organizations/${organizationId}`)
+	}
+
+	async getOrganizationKeys(organizationId: string) {
+		return robodevRestClient.get(
+			{ resSchema: paginateOrganizationKeysResponseSchema },
+			`/organizations/${organizationId}/keys`,
+		)
 	}
 }
