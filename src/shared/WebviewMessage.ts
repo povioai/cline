@@ -26,6 +26,9 @@ export interface WebviewMessage {
 		| "openMcpSettings"
 		| "restartMcpServer"
 		| "autoApprovalSettings"
+		| "checkpointDiff"
+		| "checkpointRestore"
+		| "taskCompletionViewChanges"
 		| "googleLogin"
 		| "googleLogout"
 	text?: string
@@ -33,8 +36,11 @@ export interface WebviewMessage {
 	apiConfiguration?: ApiConfiguration
 	images?: string[]
 	bool?: boolean
+	number?: number
 	autoApprovalSettings?: AutoApprovalSettings
 	isSignedIn?: boolean
 }
 
 export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"
+
+export type ClineCheckpointRestore = "task" | "workspace" | "taskAndWorkspace"

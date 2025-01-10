@@ -24,7 +24,10 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
 
 	const handleInputChange = (field: keyof ApiConfiguration) => (event: any) => {
-		setApiConfiguration({ ...apiConfiguration, [field]: event.target.value })
+		setApiConfiguration({
+			...apiConfiguration,
+			[field]: event.target.value,
+		})
 	}
 
 	const { selectedProvider, selectedModelId, selectedModelInfo } = useMemo(() => {
@@ -189,26 +192,25 @@ export const ModelInfoView = ({
 		),
 		modelInfo.supportsPromptCache && modelInfo.cacheWritesPrice && (
 			<span key="cacheWritesPrice">
-				<span style={{ fontWeight: 500 }}>Cache writes price:</span>{" "}
-				{formatPrice(modelInfo.cacheWritesPrice || 0)}/million tokens
+				<span style={{ fontWeight: 500 }}>Cache writes price:</span> {formatPrice(modelInfo.cacheWritesPrice || 0)}
+				/million tokens
 			</span>
 		),
 		modelInfo.supportsPromptCache && modelInfo.cacheReadsPrice && (
 			<span key="cacheReadsPrice">
-				<span style={{ fontWeight: 500 }}>Cache reads price:</span>{" "}
-				{formatPrice(modelInfo.cacheReadsPrice || 0)}/million tokens
+				<span style={{ fontWeight: 500 }}>Cache reads price:</span> {formatPrice(modelInfo.cacheReadsPrice || 0)}/million
+				tokens
 			</span>
 		),
 		modelInfo.outputPrice !== undefined && modelInfo.outputPrice > 0 && (
 			<span key="outputPrice">
-				<span style={{ fontWeight: 500 }}>Output price:</span> {formatPrice(modelInfo.outputPrice)}/million
-				tokens
+				<span style={{ fontWeight: 500 }}>Output price:</span> {formatPrice(modelInfo.outputPrice)}/million tokens
 			</span>
 		),
 		isGemini && (
 			<span key="geminiInfo" style={{ fontStyle: "italic" }}>
-				* Free up to {selectedModelId && selectedModelId.includes("flash") ? "15" : "2"} requests per minute.
-				After that, billing depends on prompt size.{" "}
+				* Free up to {selectedModelId && selectedModelId.includes("flash") ? "15" : "2"} requests per minute. After that,
+				billing depends on prompt size.{" "}
 				<VSCodeLink href="https://ai.google.dev/pricing" style={{ display: "inline", fontSize: "inherit" }}>
 					For more info, see pricing details.
 				</VSCodeLink>
@@ -217,7 +219,12 @@ export const ModelInfoView = ({
 	].filter(Boolean)
 
 	return (
-		<p style={{ fontSize: "12px", marginTop: "2px", color: "var(--vscode-descriptionForeground)" }}>
+		<p
+			style={{
+				fontSize: "12px",
+				marginTop: "2px",
+				color: "var(--vscode-descriptionForeground)",
+			}}>
 			{infoItems.map((item, index) => (
 				<Fragment key={index}>
 					{item}
@@ -270,7 +277,11 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 			selectedModelId = defaultId
 			selectedModelInfo = models[defaultId]
 		}
-		return { selectedProvider: provider, selectedModelId, selectedModelInfo }
+		return {
+			selectedProvider: provider,
+			selectedModelId,
+			selectedModelInfo,
+		}
 	}
 	switch (provider) {
 		case "anthropic":

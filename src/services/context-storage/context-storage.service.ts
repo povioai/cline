@@ -9,6 +9,7 @@ export type SecretKey =
 	| "openAiApiKey"
 	| "geminiApiKey"
 	| "openAiNativeApiKey"
+	| "deepSeekApiKey"
 export type GlobalStateKey =
 	| "apiProvider"
 	| "apiModelId"
