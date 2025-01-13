@@ -410,12 +410,11 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "apiConfiguration":
 						if (message.apiConfiguration) {
-							const { anthropicKey, openaiKey } = await this.robodevOrganizationService.getOrganizationKeys()
+							await this.robodevOrganizationService.storeOrganizationKeys()
 
 							const {
 								apiProvider,
 								apiModelId,
-								apiKey,
 								openRouterApiKey,
 								awsAccessKey,
 								awsSecretKey,
@@ -442,7 +441,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							} = message.apiConfiguration
 							await this.updateGlobalState("apiProvider", apiProvider)
 							await this.updateGlobalState("apiModelId", apiModelId)
-							await this.storeSecret("apiKey", anthropicKey)
 							await this.storeSecret("openRouterApiKey", openRouterApiKey)
 							await this.storeSecret("awsAccessKey", awsAccessKey)
 							await this.storeSecret("awsSecretKey", awsSecretKey)
@@ -452,7 +450,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("vertexProjectId", vertexProjectId)
 							await this.updateGlobalState("vertexRegion", vertexRegion)
 							await this.updateGlobalState("openAiBaseUrl", openAiBaseUrl)
-							await this.storeSecret("openAiApiKey", openaiKey)
 							await this.updateGlobalState("openAiModelId", openAiModelId)
 							await this.updateGlobalState("ollamaModelId", ollamaModelId)
 							await this.updateGlobalState("ollamaBaseUrl", ollamaBaseUrl)
@@ -1351,7 +1348,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	async handleAuthorizationFlowCallback(data: IAuthorizationFlowCallbackQuery) {
 		try {
 			await this.robodevAuthService.handleAuthorizationFlowCallback(data)
-			await this.robodevOrganizationService.getOrganizationKeys()
+			await this.robodevOrganizationService.storeOrganizationKeys()
 			vscode.window.showInformationMessage("Logged in successfully")
 		} catch (e) {
 			if (e instanceof UserNotPartOfAnyOrganizationError) {
