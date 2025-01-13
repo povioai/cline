@@ -4,7 +4,7 @@ import { UserNotPartOfAnyOrganizationError } from "../../../shared/errors"
 
 export class RobodevAuthClient {
 	async getLoginUrl(): Promise<string> {
-		const data = await robodevRestClient.get({ resSchema: googleUrlResponseSchema }, "/auth/google/login")
+		const data = await robodevRestClient.get({ resSchema: googleUrlResponseSchema }, "extension/auth/google/login")
 
 		return data.url
 	}
@@ -31,7 +31,7 @@ export class RobodevAuthClient {
 				{
 					resSchema: userMeResponseSchema,
 				},
-				"/user/register/google",
+				"extension/user/register/google",
 				data,
 				{
 					headers: {
