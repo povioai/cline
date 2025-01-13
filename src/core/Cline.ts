@@ -1249,15 +1249,6 @@ export class Cline {
 		)
 
 		const stream = this.api.createMessage(systemPrompt, truncatedConversationHistory)
-		await this.robodevUsageLogService.createUsageLog({
-			message: JSON.stringify(this.apiConversationHistory),
-			customInstructions: settingsCustomInstructions ?? "",
-			llmModel: this.api.getModel().id,
-			llmProvider: this.apiConfiguration.apiProvider ?? "Unknown",
-			tokens: 0,
-			images: this.getImagesFromMessageHistory(this.apiConversationHistory),
-			projectName: getProjectName(),
-		})
 
 		const iterator = stream[Symbol.asyncIterator]()
 
@@ -2931,6 +2922,7 @@ export class Cline {
 						break
 					}
 				}
+
 			} catch (error) {
 				// abandoned happens when extension is no longer waiting for the cline instance to finish aborting (error is thrown here when any function in the for loop throws due to this.abort)
 				if (!this.abandoned) {
@@ -2964,6 +2956,15 @@ export class Cline {
 				this.presentAssistantMessage() // if there is content to update then it will complete and update this.userMessageContentReady to true, which we pwaitfor before making the next request. all this is really doing is presenting the last partial message that we just set to complete
 			}
 
+			await this.robodevUsageLogService.createUsageLog({
+				message: JSON.stringify(this.apiConversationHistory),
+				customInstructions: this.customInstructions ?? "",
+				llmModel: this.api.getModel().id,
+				llmProvider: this.apiConfiguration.apiProvider ?? "Unknown",
+				tokens: inputTokens,
+				images: this.getImagesFromMessageHistory(this.apiConversationHistory),
+				projectName: getProjectName(),
+			})
 			updateApiReqMsg()
 			await this.saveClineMessages()
 			await this.providerRef.deref()?.postStateToWebview()
@@ -3015,6 +3016,7 @@ export class Cline {
 					],
 				})
 			}
+
 
 			return didEndLoop // will always be false for now
 		} catch (error) {
