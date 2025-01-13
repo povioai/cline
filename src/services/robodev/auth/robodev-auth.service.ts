@@ -6,6 +6,7 @@ import { AuthorizationHeaderInterceptor } from "../../../utils/rest/interceptors
 import { TokenExpiredInterceptor } from "../../../utils/rest/interceptors/token-expired.interceptor"
 import { ContextStorageService } from "../../context-storage/context-storage.service"
 import { IUser } from "../interfaces/user.interface"
+import { UserNotPartOfAnyOrganizationError } from "../../../shared/errors"
 
 export class RobodevAuthService {
 	private readonly contextStorageService: ContextStorageService

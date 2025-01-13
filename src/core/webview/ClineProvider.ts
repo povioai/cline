@@ -410,8 +410,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "apiConfiguration":
 						if (message.apiConfiguration) {
-							const { anthropicKey, openaiKey } =
-								await this.robodevOrganizationService.getOrganizationKeys()
+							const { anthropicKey, openaiKey } = await this.robodevOrganizationService.getOrganizationKeys()
 
 							const {
 								apiProvider,
@@ -1350,9 +1349,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async handleAuthorizationFlowCallback(data: IAuthorizationFlowCallbackQuery) {
-		await this.robodevAuthService.handleAuthorizationFlowCallback(data)
-
 		try {
+			await this.robodevAuthService.handleAuthorizationFlowCallback(data)
 			await this.robodevOrganizationService.getOrganizationKeys()
 			vscode.window.showInformationMessage("Logged in successfully")
 		} catch (e) {

@@ -1,10 +1,6 @@
-import {
-	googleUrlResponseSchema,
-	UserMeResponse,
-	userMeResponseSchema,
-	UserRegisterRequest,
-} from "./robodev-auth.models"
+import { googleUrlResponseSchema, UserMeResponse, userMeResponseSchema, UserRegisterRequest } from "./robodev-auth.models"
 import { robodevRestClient } from "../robodev-rest.client"
+import { UserNotPartOfAnyOrganizationError } from "../../../shared/errors"
 
 export class RobodevAuthClient {
 	async getLoginUrl(): Promise<string> {
@@ -29,18 +25,22 @@ export class RobodevAuthClient {
 		return data
 	}
 
-	registerGoogleUser(token: string, data: UserRegisterRequest): Promise<UserMeResponse> {
-		return robodevRestClient.post(
-			{
-				resSchema: userMeResponseSchema,
-			},
-			"/user/register/google",
-			data,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
+	async registerGoogleUser(token: string, data: UserRegisterRequest): Promise<UserMeResponse> {
+		try {
+			return await robodevRestClient.post(
+				{
+					resSchema: userMeResponseSchema,
 				},
-			},
-		)
+				"/user/register/google",
+				data,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				},
+			)
+		} catch (error) {
+			throw new UserNotPartOfAnyOrganizationError()
+		}
 	}
 }

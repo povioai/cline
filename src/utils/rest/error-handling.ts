@@ -5,12 +5,7 @@ import { extractServerErrorMessage } from "./rest.utils"
 import * as vscode from "vscode"
 
 // codes that we want to handle in every scenario
-export type GeneralErrorCodes =
-	| "DATA_VALIDATION_ERROR"
-	| "NETWORK_ERROR"
-	| "CANCELED_ERROR"
-	| "INTERNAL_ERROR"
-	| "UNKNOWN_ERROR"
+export type GeneralErrorCodes = "DATA_VALIDATION_ERROR" | "NETWORK_ERROR" | "CANCELED_ERROR" | "INTERNAL_ERROR" | "UNKNOWN_ERROR"
 
 export class ApplicationException<CodeT> extends Error {
 	public code: CodeT
