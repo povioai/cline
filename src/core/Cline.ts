@@ -3186,8 +3186,6 @@ export class Cline {
 			.map((m) => m.content)
 			.flat()
 
-		return contentWithImages
-			.filter((content: any) => content.type === "image")
-			.map((content: any) => content.source.data)
+		return contentWithImages.filter((content: any) => content.type === "image").map((content: any) => content.source.data)
 	}
 }

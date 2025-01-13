@@ -40,9 +40,7 @@ const MissingOrganizationMessage = ({ userErrors }: MissingOrganizationMessagePr
 
 	return (
 		<div>
-			<ErrorMessage>
-				Oops, looks like you are not a part of an organisation that supports this extension.
-			</ErrorMessage>
+			<ErrorMessage>Oops, looks like you are not a part of an organisation that supports this extension.</ErrorMessage>
 			<ContactInfo>
 				Reach out to <a href="mailto:jakob.cvetko@povio.com">jakob.cvetko@povio.com</a> to get access.
 			</ContactInfo>
