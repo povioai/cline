@@ -13,7 +13,7 @@ export class RobodevOrganizationService {
 		this.robodevOrganizationClient = new RobodevOrganizationClient()
 	}
 
-	async getOrganizationKeys(): Promise<RobodevOrganizationKeys> {
+	async storeOrganizationKeys(): Promise<RobodevOrganizationKeys> {
 		const paginatedOrganizations = await this.robodevOrganizationClient.getUserOrganizations()
 
 		if (paginatedOrganizations.items.length === 0) {
@@ -29,6 +29,9 @@ export class RobodevOrganizationService {
 		const anthropicKey = data?.items?.find((data) => data.provider === "ANTHROPIC")?.key
 
 		const openaiKey = data?.items?.find((data) => data.provider === "OPENAI")?.key
+
+		await this.contextStorageService.storeSecret("apiKey", anthropicKey)
+		await this.contextStorageService.storeSecret("openAiNativeApiKey", openaiKey)
 
 		return {
 			anthropicKey,
