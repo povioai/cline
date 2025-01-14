@@ -1,3 +1,3 @@
 import { RestClient } from "../../utils/rest/rest.client"
 
-export const robodevRestClient = new RestClient({ config: { baseURL: "http://localhost:3002" } })
+export const robodevRestClient = new RestClient({ config: { baseURL: "https://cline.robodev.com/api" } })
