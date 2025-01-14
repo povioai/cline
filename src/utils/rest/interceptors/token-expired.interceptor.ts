@@ -17,7 +17,7 @@ export const TokenExpiredInterceptor = new RestInterceptor((client, onExpired: (
 			const hasFailedDueToAccessTokenExpiry = error.response?.status === 401
 			const hasFailedDueToForbidden = error.response?.status === 403
 
-			if (config && hasFailedDueToAccessTokenExpiry || hasFailedDueToForbidden) {
+			if ((config && hasFailedDueToAccessTokenExpiry) || hasFailedDueToForbidden) {
 				await onExpired()
 			}
 
