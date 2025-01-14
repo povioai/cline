@@ -3028,7 +3028,6 @@ export class Cline {
 						break
 					}
 				}
-
 			} catch (error) {
 				// abandoned happens when extension is no longer waiting for the cline instance to finish aborting (error is thrown here when any function in the for loop throws due to this.abort)
 				if (!this.abandoned) {
@@ -3124,7 +3123,6 @@ export class Cline {
 					],
 				})
 			}
-
 
 			return didEndLoop // will always be false for now
 		} catch (error) {
