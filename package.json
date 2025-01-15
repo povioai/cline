@@ -2,7 +2,7 @@
 	"name": "povioai",
 	"displayName": "Robodev",
 	"description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -49,49 +49,49 @@
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "claude-dev-ActivityBar",
+					"id": "robodev-vs-ActivityBar",
 					"title": "Robodev",
 					"icon": "assets/icons/robodev_dark.png"
 				}
 			]
 		},
 		"views": {
-			"claude-dev-ActivityBar": [
+			"robodev-vs-ActivityBar": [
 				{
 					"type": "webview",
-					"id": "claude-dev.SidebarProvider",
+					"id": "robodev-vs.SidebarProvider",
 					"name": ""
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "cline.plusButtonClicked",
+				"command": "robodev-vs.plusButtonClicked",
 				"title": "New Task",
 				"icon": "$(add)"
 			},
 			{
-				"command": "cline.mcpButtonClicked",
+				"command": "robodev-vs.mcpButtonClicked",
 				"title": "MCP Servers",
 				"icon": "$(server)"
 			},
 			{
-				"command": "cline.historyButtonClicked",
+				"command": "robodev-vs.historyButtonClicked",
 				"title": "History",
 				"icon": "$(history)"
 			},
 			{
-				"command": "cline.popoutButtonClicked",
+				"command": "robodev-vs.popoutButtonClicked",
 				"title": "Open in Editor",
 				"icon": "$(link-external)"
 			},
 			{
-				"command": "cline.settingsButtonClicked",
+				"command": "robodev-vs.settingsButtonClicked",
 				"title": "Settings",
 				"icon": "$(settings-gear)"
 			},
 			{
-				"command": "cline.openInNewTab",
+				"command": "robodev-vs.openInNewTab",
 				"title": "Open In New Tab",
 				"category": "Cline"
 			}
@@ -99,29 +99,29 @@
 		"menus": {
 			"view/title": [
 				{
-					"command": "cline.plusButtonClicked",
+					"command": "robodev-vs.plusButtonClicked",
 					"group": "navigation@1",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == robodev-vs.SidebarProvider"
 				},
 				{
-					"command": "cline.mcpButtonClicked",
+					"command": "robodev-vs.mcpButtonClicked",
 					"group": "navigation@2",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == robodev-vs.SidebarProvider"
 				},
 				{
-					"command": "cline.historyButtonClicked",
+					"command": "robodev-vs.historyButtonClicked",
 					"group": "navigation@3",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == robodev-vs.SidebarProvider"
 				},
 				{
-					"command": "cline.popoutButtonClicked",
+					"command": "robodev-vs.popoutButtonClicked",
 					"group": "navigation@4",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == robodev-vs.SidebarProvider"
 				},
 				{
-					"command": "cline.settingsButtonClicked",
+					"command": "robodev-vs.settingsButtonClicked",
 					"group": "navigation@5",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == robodev-vs.SidebarProvider"
 				}
 			]
 		}
