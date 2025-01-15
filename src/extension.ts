@@ -36,7 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.plusButtonClicked", async () => {
+		vscode.commands.registerCommand("robodev-vs.plusButtonClicked", async () => {
 			const isSignedIn = getState(context, "isSignedIn")
 			if (!isSignedIn) {
 				vscode.window.showInformationMessage("Please sign in first")
@@ -53,7 +53,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.mcpButtonClicked", () => {
+		vscode.commands.registerCommand("robodev-vs.mcpButtonClicked", () => {
 			const isSignedIn = getState(context, "isSignedIn")
 			if (!isSignedIn) {
 				vscode.window.showInformationMessage("Please sign in first")
@@ -99,11 +99,11 @@ export function activate(context: vscode.ExtensionContext) {
 		await vscode.commands.executeCommand("workbench.action.lockEditorGroup")
 	}
 
-	context.subscriptions.push(vscode.commands.registerCommand("cline.popoutButtonClicked", openClineInNewTab))
-	context.subscriptions.push(vscode.commands.registerCommand("cline.openInNewTab", openClineInNewTab))
+	context.subscriptions.push(vscode.commands.registerCommand("robodev-vs.popoutButtonClicked", openClineInNewTab))
+	context.subscriptions.push(vscode.commands.registerCommand("robodev-vs.openInNewTab", openClineInNewTab))
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.settingsButtonClicked", () => {
+		vscode.commands.registerCommand("robodev-vs.settingsButtonClicked", () => {
 			//vscode.window.showInformationMessage(message)
 			const isSignedIn = getState(context, "isSignedIn")
 			if (!isSignedIn) {
@@ -118,7 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.historyButtonClicked", () => {
+		vscode.commands.registerCommand("robodev-vs.historyButtonClicked", () => {
 			const isSignedIn = getState(context, "isSignedIn")
 			if (!isSignedIn) {
 				vscode.window.showInformationMessage("Please sign in first")
