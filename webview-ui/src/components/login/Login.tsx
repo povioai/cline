@@ -20,8 +20,8 @@ const GoogleButton = styled.button`
 	border-radius: 8px;
 	padding: 12px 24px;
 	font-size: 16px;
-	width: 280px; 
-	height: 50px; 
+	width: 280px;
+	height: 50px;
 	cursor: pointer;
 	transition:
 		background-color 0.3s,

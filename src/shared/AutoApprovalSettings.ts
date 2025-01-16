@@ -15,9 +15,9 @@ export interface AutoApprovalSettings {
 }
 
 export const DEFAULT_AUTO_APPROVAL_SETTINGS: AutoApprovalSettings = {
-	enabled: false,
+	enabled: true,
 	actions: {
-		readFiles: false,
+		readFiles: true,
 		editFiles: false,
 		executeCommands: false,
 		useBrowser: false,

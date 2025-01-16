@@ -31,6 +31,8 @@ export interface WebviewMessage {
 		| "taskCompletionViewChanges"
 		| "googleLogin"
 		| "googleLogout"
+		| "addRobodevPrompt"
+		| "reviewCodebase"
 	text?: string
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ApiConfiguration

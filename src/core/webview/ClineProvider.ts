@@ -29,6 +29,7 @@ import { RobodevAuthService } from "../../services/robodev/auth/robodev-auth.ser
 import { GlobalStateKey, SecretKey } from "../../services/context-storage/context-storage.service"
 import { RobodevOrganizationService } from "../../services/robodev/organization/robodev-organization.service"
 import { UserError, UserNotPartOfAnyOrganizationError } from "../../shared/errors"
+import { reviewCodebasePrompt, robodevCustomInstructions } from "../../services/robodev/robodev.prompt"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -42,6 +43,7 @@ export const GlobalFileNames = {
 	openRouterModels: "openrouter_models.json",
 	mcpSettings: "cline_mcp_settings.json",
 	clineRules: ".clinerules",
+	robodevSummary: ".robodev",
 }
 
 export class ClineProvider implements vscode.WebviewViewProvider {
@@ -296,6 +298,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		webview.onDidReceiveMessage(
 			async (message: WebviewMessage) => {
 				switch (message.type) {
+					case "reviewCodebase": {
+						await this.initClineWithTask(reviewCodebasePrompt())
+						break
+					}
+					case "addRobodevPrompt": {
+						await this.updateCustomInstructions(robodevCustomInstructions())
+						break
+					}
 					case "googleLogin": {
 						await this.robodevAuthService.openGoogleAuthFlow()
 						break
@@ -1083,7 +1093,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				openRouterModelInfo,
 			},
 			lastShownAnnouncementId,
-			customInstructions,
+			customInstructions: customInstructions || robodevCustomInstructions(),
 			taskHistory,
 			autoApprovalSettings: autoApprovalSettings || DEFAULT_AUTO_APPROVAL_SETTINGS, // default value can be 0 or empty string
 			isSignedIn: isSignedIn,

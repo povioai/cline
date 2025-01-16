@@ -47,7 +47,7 @@ import { AssistantMessageContent, parseAssistantMessage, ToolParamName, ToolUseN
 import { constructNewFileContent } from "./assistant-message/diff"
 import { parseMentions } from "./mentions"
 import { formatResponse } from "./prompts/responses"
-import { addUserInstructions, SYSTEM_PROMPT } from "./prompts/system"
+import { addContextualInstructions, addUserInstructions, SYSTEM_PROMPT } from "./prompts/system"
 import { getNextTruncationRange, getTruncatedMessages } from "./sliding-window"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
 import { showSystemNotification } from "../integrations/notifications"
@@ -1196,6 +1196,22 @@ export class Cline {
 			} catch {
 				console.error(`Failed to read .clinerules file at ${clineRulesFilePath}`)
 			}
+		}
+		const robodevSummaryFilePath = path.resolve(cwd, GlobalFileNames.robodevSummary)
+		let robodevSummaryInstructions: string | undefined
+		if (await fileExistsAtPath(robodevSummaryFilePath)) {
+			try {
+				const robodevSummaryContent = (await fs.readFile(robodevSummaryFilePath, "utf8")).trim()
+				if (robodevSummaryContent) {
+					robodevSummaryInstructions = robodevSummaryContent
+				}
+			} catch {
+				console.error(`Failed to read .robodev file at ${robodevSummaryFilePath}`)
+			}
+		}
+
+		if (robodevSummaryInstructions) {
+			systemPrompt += addContextualInstructions(robodevSummaryInstructions)
 		}
 
 		if (settingsCustomInstructions || clineRulesFileInstructions) {
