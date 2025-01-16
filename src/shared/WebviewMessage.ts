@@ -40,6 +40,8 @@ export interface WebviewMessage {
 	// | "relaunchChromeDebugMode"
 		| "googleLogin"
 		| "googleLogout"
+		| "addRobodevPrompt"
+		| "reviewCodebase"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
