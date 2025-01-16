@@ -8,6 +8,7 @@ export const usageLogRequestSchema = z.object({
 	llmProvider: z.string(),
 	llmModel: z.string(),
 	projectName: z.string(),
+	amount: z.number(),
 })
 
 export type UsageLogRequest = z.infer<typeof usageLogRequestSchema>
