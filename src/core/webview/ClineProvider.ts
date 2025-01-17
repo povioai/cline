@@ -154,6 +154,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.outputChannel.appendLine("Resolving webview view")
 		this.view = webviewView
 
+		this.robodevAuthService.setWebviewMessageService(this.view)
+
 		webviewView.webview.options = {
 			// Allow scripts in the webview
 			enableScripts: true,
@@ -1351,7 +1353,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private async logout() {
 		await this.robodevAuthService.logout()
 		await this.postStateToWebview()
-		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		vscode.window.showInformationMessage("Logged out successfully")
 	}
 

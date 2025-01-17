@@ -1,4 +1,10 @@
-import { googleUrlResponseSchema, UserMeResponse, userMeResponseSchema, UserRegisterRequest } from "./robodev-auth.models"
+import {
+	accessTokenRefreshResponseSchema,
+	googleUrlResponseSchema,
+	UserMeResponse,
+	userMeResponseSchema,
+	UserRegisterRequest,
+} from "./robodev-auth.models"
 import { robodevRestClient } from "../robodev-rest.client"
 import { UserNotPartOfAnyOrganizationError } from "../../../shared/errors"
 
@@ -42,5 +48,17 @@ export class RobodevAuthClient {
 		} catch (error) {
 			throw new UserNotPartOfAnyOrganizationError()
 		}
+	}
+
+	async refreshAccessToken(refreshToken: string) {
+		return robodevRestClient.post(
+			{
+				resSchema: accessTokenRefreshResponseSchema,
+			},
+			"extension/auth/refresh",
+			{
+				refreshToken,
+			},
+		)
 	}
 }
