@@ -2979,7 +2979,9 @@ export class Cline {
 				tokens: inputTokens,
 				images: this.getImagesFromMessageHistory(this.apiConversationHistory),
 				projectName: getProjectName(),
-				amount: totalCost ?? 0,
+				amount:
+					totalCost ??
+					calculateApiCost(this.api.getModel().info, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens),
 			})
 			updateApiReqMsg()
 			await this.saveClineMessages()

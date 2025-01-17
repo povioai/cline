@@ -19,3 +19,10 @@ export const userMeResponseSchema = z.object({
 })
 
 export type UserMeResponse = z.infer<typeof userMeResponseSchema>
+
+export const accessTokenRefreshResponseSchema = z.object({
+	accessToken: z.string(),
+	refreshToken: z.string().optional(),
+})
+
+export type AccessTokenRefreshResponse = z.infer<typeof accessTokenRefreshResponseSchema>
