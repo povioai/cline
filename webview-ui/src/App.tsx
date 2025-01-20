@@ -10,7 +10,7 @@ import McpView from "./components/mcp/McpView"
 import Login from "./components/login/Login"
 
 const AppContent = () => {
-	const { didHydrateState, shouldShowAnnouncement, isSignedIn } = useExtensionState()
+	const { didHydrateState, shouldShowAnnouncement, isSignedIn, setIsSignedIn } = useExtensionState()
 	const [showSettings, setShowSettings] = useState(false)
 	const [showHistory, setShowHistory] = useState(false)
 	const [showMcp, setShowMcp] = useState(false)
@@ -41,10 +41,16 @@ const AppContent = () => {
 						setShowHistory(false)
 						setShowMcp(false)
 						break
+					case "logout":
+						setShowSettings(false)
+						setShowMcp(false)
+						setShowMcp(false)
+						setIsSignedIn(false)
+						break
 				}
 				break
 		}
-	}, [])
+	}, [setIsSignedIn])
 
 	useEvent("message", handleMessage)
 

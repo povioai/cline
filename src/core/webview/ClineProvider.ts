@@ -14,7 +14,7 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
-import { ExtensionMessage, ExtensionState } from "../../shared/ExtensionMessage"
+import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ClineCheckpointRestore, WebviewMessage } from "../../shared/WebviewMessage"
 import { fileExistsAtPath } from "../../utils/fs"
@@ -69,6 +69,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.mcpHub = new McpHub(this)
 		this.robodevAuthService = new RobodevAuthService(context)
 		this.robodevOrganizationService = new RobodevOrganizationService(context)
+		this.handleAuthInterceptors()
 	}
 
 	/*
@@ -1095,7 +1096,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				openRouterModelInfo,
 			},
 			lastShownAnnouncementId,
-			customInstructions: customInstructions || robodevCustomInstructions(),
+			customInstructions: customInstructions,
 			taskHistory,
 			autoApprovalSettings: autoApprovalSettings || DEFAULT_AUTO_APPROVAL_SETTINGS, // default value can be 0 or empty string
 			isSignedIn: isSignedIn,
@@ -1217,5 +1218,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 		await this.updateGlobalState("isSignInLoading", false)
 		await this.postStateToWebview()
+	}
+
+	async handleAuthInterceptors() {
+		const isSignedIn = (await this.getGlobalState("isSignedIn")) as boolean
+
+		if (!isSignedIn) {
+			return
+		}
+
+		await this.robodevAuthService.addAuthorizationHeaderInterceptor()
+		await this.robodevAuthService.addTokenExpiredInterceptor()
 	}
 }
