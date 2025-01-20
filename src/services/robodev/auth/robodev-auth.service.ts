@@ -46,16 +46,23 @@ export class RobodevAuthService {
 		}
 
 		await this.contextStorageService.updateGlobalState("isSignedIn", true)
-		await this.contextStorageService.updateGlobalState("accessToken", data.accessToken)
-		await this.contextStorageService.updateGlobalState("refreshToken", data.refreshToken)
+		await this.contextStorageService.storeSecret("accessToken", data.accessToken)
+		await this.contextStorageService.storeSecret("refreshToken", data.refreshToken)
 		await this.contextStorageService.updateGlobalState("user", user)
 
+		await this.addAuthorizationHeaderInterceptor()
+		await this.addTokenExpiredInterceptor()
+	}
+
+	async addAuthorizationHeaderInterceptor() {
 		robodevRestClient.attachInterceptor(AuthorizationHeaderInterceptor, async () => {
-			const accessToken = await this.contextStorageService.getGlobalState("accessToken")
+			const accessToken = await this.contextStorageService.getSecret("accessToken")
 
 			return accessToken ? `Bearer ${accessToken}` : null
 		})
+	}
 
+	async addTokenExpiredInterceptor() {
 		robodevRestClient.attachInterceptor(TokenExpiredInterceptor, async () => {
 			try {
 				await this.refreshAccessToken()
@@ -66,7 +73,7 @@ export class RobodevAuthService {
 	}
 
 	async refreshAccessToken() {
-		const refreshToken = (await this.contextStorageService.getGlobalState("refreshToken")) as string
+		const refreshToken = (await this.contextStorageService.getSecret("refreshToken")) as string
 
 		if (!refreshToken) {
 			throw new Error("No refresh token found")
@@ -74,20 +81,21 @@ export class RobodevAuthService {
 
 		const data = await this.robodevLoginClient.refreshAccessToken(refreshToken)
 
-		await this.contextStorageService.updateGlobalState("accessToken", data.accessToken)
+		await this.contextStorageService.storeSecret("accessToken", data.accessToken)
 
 		if (data.refreshToken) {
-			await this.contextStorageService.updateGlobalState("refreshToken", data.refreshToken)
+			await this.contextStorageService.storeSecret("refreshToken", data.refreshToken)
 		}
 	}
 
 	async logout() {
 		await this.contextStorageService.updateGlobalState("isSignedIn", false)
-		await this.contextStorageService.updateGlobalState("accessToken", undefined)
-		await this.contextStorageService.updateGlobalState("refreshToken", undefined)
+		await this.contextStorageService.storeSecret("accessToken", undefined)
+		await this.contextStorageService.storeSecret("refreshToken", undefined)
 		await this.contextStorageService.updateGlobalState("idToken", undefined)
 		await this.contextStorageService.updateGlobalState("user", undefined)
 		await this.contextStorageService.updateGlobalState("userErrors", undefined)
-		await this.webviewMessageService?.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+
+		await this.webviewMessageService?.postMessageToWebview({ type: "action", action: "logout" })
 	}
 }
