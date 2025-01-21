@@ -14,7 +14,7 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
-import { ExtensionMessage, ExtensionState } from "../../shared/ExtensionMessage"
+import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ClineCheckpointRestore, WebviewMessage } from "../../shared/WebviewMessage"
 import { fileExistsAtPath } from "../../utils/fs"
@@ -29,6 +29,7 @@ import { RobodevAuthService } from "../../services/robodev/auth/robodev-auth.ser
 import { GlobalStateKey, SecretKey } from "../../services/context-storage/context-storage.service"
 import { RobodevOrganizationService } from "../../services/robodev/organization/robodev-organization.service"
 import { UserError, UserNotPartOfAnyOrganizationError } from "../../shared/errors"
+import { reviewCodebasePrompt, robodevCustomInstructions } from "../../services/robodev/robodev.prompt"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -42,6 +43,7 @@ export const GlobalFileNames = {
 	openRouterModels: "openrouter_models.json",
 	mcpSettings: "cline_mcp_settings.json",
 	clineRules: ".clinerules",
+	robodevSummary: ".robodev",
 }
 
 export class ClineProvider implements vscode.WebviewViewProvider {
@@ -67,6 +69,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.mcpHub = new McpHub(this)
 		this.robodevAuthService = new RobodevAuthService(context)
 		this.robodevOrganizationService = new RobodevOrganizationService(context)
+		this.handleAuthInterceptors()
 	}
 
 	/*
@@ -107,6 +110,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	): void | Thenable<void> {
 		this.outputChannel.appendLine("Resolving webview view")
 		this.view = webviewView
+
+		this.robodevAuthService.setWebviewMessageService(this.view)
 
 		webviewView.webview.options = {
 			// Allow scripts in the webview
@@ -296,6 +301,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		webview.onDidReceiveMessage(
 			async (message: WebviewMessage) => {
 				switch (message.type) {
+					case "reviewCodebase": {
+						await this.initClineWithTask(reviewCodebasePrompt())
+						break
+					}
+					case "addRobodevPrompt": {
+						await this.updateCustomInstructions(robodevCustomInstructions())
+						break
+					}
 					case "googleLogin": {
 						await this.robodevAuthService.openGoogleAuthFlow()
 						break
@@ -1083,7 +1096,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 				openRouterModelInfo,
 			},
 			lastShownAnnouncementId,
-			customInstructions,
+			customInstructions: customInstructions,
 			taskHistory,
 			autoApprovalSettings: autoApprovalSettings || DEFAULT_AUTO_APPROVAL_SETTINGS, // default value can be 0 or empty string
 			isSignedIn: isSignedIn,
@@ -1185,7 +1198,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private async logout() {
 		await this.robodevAuthService.logout()
 		await this.postStateToWebview()
-		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		vscode.window.showInformationMessage("Logged out successfully")
 	}
 
@@ -1206,5 +1218,16 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		}
 		await this.updateGlobalState("isSignInLoading", false)
 		await this.postStateToWebview()
+	}
+
+	async handleAuthInterceptors() {
+		const isSignedIn = (await this.getGlobalState("isSignedIn")) as boolean
+
+		if (!isSignedIn) {
+			return
+		}
+
+		await this.robodevAuthService.addAuthorizationHeaderInterceptor()
+		await this.robodevAuthService.addTokenExpiredInterceptor()
 	}
 }

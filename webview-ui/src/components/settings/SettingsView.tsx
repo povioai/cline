@@ -40,6 +40,14 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 
 	If we only want to run code once on mount we can use react-use's useEffectOnce or useMount
 	*/
+	const addRobodevPrompt = () => {
+		vscode.postMessage({ type: "addRobodevPrompt" })
+	}
+
+	const reviewCodeBase = () => {
+		vscode.postMessage({ type: "reviewCodebase" })
+		onDone()
+	}
 
 	const handleResetState = () => {
 		vscode.postMessage({ type: "resetState" })
@@ -101,10 +109,28 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 							color: "var(--vscode-descriptionForeground)",
 						}}>
 						These instructions are added to the end of the system prompt sent with every request.
+						<button
+							onClick={addRobodevPrompt}
+							style={{
+								fontSize: "12px",
+								margin: "0",
+								padding: "0",
+								background: "none",
+								border: "none",
+								color: "white",
+								textDecoration: "underline",
+								cursor: "pointer",
+							}}>
+							Add robodev prompt
+						</button>
 					</p>
 				</div>
 
-				<VSCodeButton onClick={handleLogOut} style={{ marginTop: "5px", width: "auto" }}>
+				<VSCodeButton onClick={reviewCodeBase} style={{ marginTop: "5px", marginBottom: "5px", width: "auto" }}>
+					Review codebase
+				</VSCodeButton>
+
+				<VSCodeButton onClick={handleLogOut} style={{ marginTop: "10px", width: "auto" }}>
 					Log out
 				</VSCodeButton>
 

@@ -10,6 +10,8 @@ export type SecretKey =
 	| "geminiApiKey"
 	| "openAiNativeApiKey"
 	| "deepSeekApiKey"
+	| "accessToken"
+	| "refreshToken"
 export type GlobalStateKey =
 	| "apiProvider"
 	| "apiModelId"
@@ -34,8 +36,6 @@ export type GlobalStateKey =
 	| "isSignedIn"
 	| "authFlow"
 	| "idToken"
-	| "accessToken"
-	| "refreshToken"
 	| "user"
 	| "userErrors"
 	| "isSignInLoading"
