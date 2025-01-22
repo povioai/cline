@@ -62,6 +62,7 @@ export interface ExtensionState {
 	user?: { name: string; email: string }
 	userErrors?: UserError[]
 	isSignInLoading?: boolean
+	summarizeTaskEnabled?: boolean
 }
 
 export interface ClineMessage {

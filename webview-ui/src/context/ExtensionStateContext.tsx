@@ -40,6 +40,7 @@ export const ExtensionStateContextProvider: React.FC<{
 		chatSettings: DEFAULT_CHAT_SETTINGS,
 		isSignInLoading: false,
 		userErrors: undefined,
+		summarizeTaskEnabled: false,
 	})
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)
