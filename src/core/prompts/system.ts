@@ -891,12 +891,13 @@ You accomplish a given task iteratively, breaking it down into clear steps and w
 
 export function addContextualInstructions(context: string) {
 	return `
-	====
+====
 	
-	CONTEXTUAL SUMMARY OF THE PROJECT
+CONTEXT
 	
-	${context.trim()}
-	`
+The following context is used to explain how the project works, it should be followed to the best of your ability without interfering with the TOOL USE guidelines.
+	
+${context.trim()}`
 }
 
 export function addUserInstructions(settingsCustomInstructions?: string, clineRulesFileInstructions?: string) {

@@ -3,7 +3,7 @@ import {
 	paginatedOrganizationResponseSchema,
 	paginateOrganizationKeysResponseSchema,
 } from "./robodev-organization.models"
-import { robodevRestClient } from "../robodev-rest.client"
+import { robodevRestClient } from "../../robodev-rest.client"
 
 export class RobodevOrganizationClient {
 	async getUserOrganizations() {

@@ -51,13 +51,14 @@ import { addContextualInstructions, addUserInstructions, SYSTEM_PROMPT } from ".
 import { getNextTruncationRange, getTruncatedMessages } from "./sliding-window"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
 import { showSystemNotification } from "../integrations/notifications"
-import { RobodevUsageLogService } from "../services/robodev/usage-logs/robodev-usage-log.service"
+import { RobodevUsageLogService } from "../services/robodev/data/usage-logs/robodev-usage-log.service"
 import { getProjectName } from "../utils/project-name.util"
 import { removeInvalidChars } from "../utils/string"
 import { fixModelHtmlEscaping } from "../utils/string"
 import { OpenAiHandler } from "../api/providers/openai"
 import CheckpointTracker from "../integrations/checkpoints/CheckpointTracker"
 import getFolderSize from "get-folder-size"
+import { findRobodevSummaryFileByTaskId } from "../services/robodev/utils"
 
 const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop") // may or may not exist but fs checking existence would immediately ask for permission which would be bad UX, need to come up with a better solution
 
@@ -115,6 +116,7 @@ export class Cline {
 		task?: string,
 		images?: string[],
 		historyItem?: HistoryItem,
+		apiConversationHistory?: Anthropic.MessageParam[],
 	) {
 		this.providerRef = new WeakRef(provider)
 		this.api = buildApiHandler(apiConfiguration)
@@ -132,7 +134,7 @@ export class Cline {
 			this.resumeTaskFromHistory()
 		} else if (task || images) {
 			this.taskId = Date.now().toString()
-			this.startTask(task, images)
+			this.startTask(task, images, apiConversationHistory)
 		} else {
 			throw new Error("Either historyItem or task/images must be provided")
 		}
@@ -727,11 +729,11 @@ export class Cline {
 
 	// Task lifecycle
 
-	private async startTask(task?: string, images?: string[]): Promise<void> {
+	private async startTask(task?: string, images?: string[], apiConversationHistory?: Anthropic.MessageParam[]): Promise<void> {
 		// conversationHistory (for API) and clineMessages (for webview) need to be in sync
 		// if the extension process were killed, then on restart the clineMessages might not be empty, so we need to set it to [] when we create a new Cline client (otherwise webview would show stale messages from previous session)
 		this.clineMessages = []
-		this.apiConversationHistory = []
+		this.apiConversationHistory = apiConversationHistory ?? []
 		await this.providerRef.deref()?.postStateToWebview()
 
 		await this.say("text", task, images)
@@ -1197,17 +1199,22 @@ export class Cline {
 				console.error(`Failed to read .clinerules file at ${clineRulesFilePath}`)
 			}
 		}
-		const robodevSummaryFilePath = path.resolve(cwd, GlobalFileNames.robodevSummary)
+		const robodevFolderPath = path.resolve(cwd, GlobalFileNames.robodevSummary)
+
 		let robodevSummaryInstructions: string | undefined
-		if (await fileExistsAtPath(robodevSummaryFilePath)) {
-			try {
-				const robodevSummaryContent = (await fs.readFile(robodevSummaryFilePath, "utf8")).trim()
-				if (robodevSummaryContent) {
-					robodevSummaryInstructions = robodevSummaryContent
-				}
-			} catch {
-				console.error(`Failed to read .robodev file at ${robodevSummaryFilePath}`)
+
+		const files = await fs.readdir(robodevFolderPath, { withFileTypes: true })
+
+		if (files.length > 0) {
+			const fileResults = []
+
+			for (const file of files) {
+				const fullPath = path.join(robodevFolderPath, file.name)
+				const content = (await fs.readFile(fullPath, "utf-8")).trim()
+				fileResults.push({ filePath: fullPath, content })
 			}
+
+			robodevSummaryInstructions = fileResults.map((r) => r.content).join()
 		}
 
 		if (robodevSummaryInstructions) {
@@ -2558,6 +2565,11 @@ export class Cline {
 
 						try {
 							const lastMessage = this.clineMessages.at(-1)
+
+							const taskFileSummary = await findRobodevSummaryFileByTaskId(this.taskId)
+
+							this.providerRef.deref()?.updateGlobalState("summarizeTaskEnabled", !taskFileSummary)
+
 							if (block.partial) {
 								if (command) {
 									// the attempt_completion text is done, now we're getting command

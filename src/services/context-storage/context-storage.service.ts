@@ -40,6 +40,7 @@ export type GlobalStateKey =
 	| "userErrors"
 	| "isSignInLoading"
 	| "currentOrganizationId"
+	| "summarizeTaskEnabled"
 
 export class ContextStorageService {
 	constructor(private readonly context: vscode.ExtensionContext) {}

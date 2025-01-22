@@ -1,7 +1,7 @@
 import { RobodevOrganizationClient } from "./robodev-organization.client"
 import { RobodevOrganizationKeys } from "./robodev-organization.types"
-import { UserNotPartOfAnyOrganizationError } from "../../../shared/errors"
-import { ContextStorageService } from "../../context-storage/context-storage.service"
+import { UserNotPartOfAnyOrganizationError } from "../../../../shared/errors"
+import { ContextStorageService } from "../../../context-storage/context-storage.service"
 import vscode from "vscode"
 
 export class RobodevOrganizationService {

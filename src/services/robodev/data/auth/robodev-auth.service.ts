@@ -1,12 +1,12 @@
 import vscode from "vscode"
 import { RobodevAuthClient } from "./robodev-auth.client"
-import { IAuthorizationFlowCallbackQuery } from "../interfaces/authorization-flow-callback.query.interface"
-import { robodevRestClient } from "../robodev-rest.client"
-import { AuthorizationHeaderInterceptor } from "../../../utils/rest/interceptors/authorization-header.interceptor"
-import { TokenExpiredInterceptor } from "../../../utils/rest/interceptors/token-expired.interceptor"
-import { ContextStorageService } from "../../context-storage/context-storage.service"
-import { IUser } from "../interfaces/user.interface"
-import { WebviewMessageService } from "../../../core/webview/webview-message.service"
+import { IAuthorizationFlowCallbackQuery } from "../../interfaces/authorization-flow-callback.query.interface"
+import { robodevRestClient } from "../../robodev-rest.client"
+import { AuthorizationHeaderInterceptor } from "../../../../utils/rest/interceptors/authorization-header.interceptor"
+import { TokenExpiredInterceptor } from "../../../../utils/rest/interceptors/token-expired.interceptor"
+import { ContextStorageService } from "../../../context-storage/context-storage.service"
+import { IUser } from "../../interfaces/user.interface"
+import { WebviewMessageService } from "../../../../core/webview/webview-message.service"
 
 export class RobodevAuthService {
 	private readonly contextStorageService: ContextStorageService

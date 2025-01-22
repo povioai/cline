@@ -16,41 +16,44 @@ const AppContent = () => {
 	const [showMcp, setShowMcp] = useState(false)
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 
-	const handleMessage = useCallback((e: MessageEvent) => {
-		const message: ExtensionMessage = e.data
-		switch (message.type) {
-			case "action":
-				switch (message.action!) {
-					case "settingsButtonClicked":
-						setShowSettings(true)
-						setShowHistory(false)
-						setShowMcp(false)
-						break
-					case "historyButtonClicked":
-						setShowSettings(false)
-						setShowHistory(true)
-						setShowMcp(false)
-						break
-					case "mcpButtonClicked":
-						setShowSettings(false)
-						setShowHistory(false)
-						setShowMcp(true)
-						break
-					case "chatButtonClicked":
-						setShowSettings(false)
-						setShowHistory(false)
-						setShowMcp(false)
-						break
-					case "logout":
-						setShowSettings(false)
-						setShowMcp(false)
-						setShowMcp(false)
-						setIsSignedIn(false)
-						break
-				}
-				break
-		}
-	}, [setIsSignedIn])
+	const handleMessage = useCallback(
+		(e: MessageEvent) => {
+			const message: ExtensionMessage = e.data
+			switch (message.type) {
+				case "action":
+					switch (message.action!) {
+						case "settingsButtonClicked":
+							setShowSettings(true)
+							setShowHistory(false)
+							setShowMcp(false)
+							break
+						case "historyButtonClicked":
+							setShowSettings(false)
+							setShowHistory(true)
+							setShowMcp(false)
+							break
+						case "mcpButtonClicked":
+							setShowSettings(false)
+							setShowHistory(false)
+							setShowMcp(true)
+							break
+						case "chatButtonClicked":
+							setShowSettings(false)
+							setShowHistory(false)
+							setShowMcp(false)
+							break
+						case "logout":
+							setShowSettings(false)
+							setShowMcp(false)
+							setShowMcp(false)
+							setIsSignedIn(false)
+							break
+					}
+					break
+			}
+		},
+		[setIsSignedIn],
+	)
 
 	useEvent("message", handleMessage)
 

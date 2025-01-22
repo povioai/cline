@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { createPaginatedSchema } from "../shared.models"
+import { createPaginatedSchema } from "../../shared.models"
 
 export const organizationKeyResponseSchema = z.object({
 	id: z.string().uuid(),

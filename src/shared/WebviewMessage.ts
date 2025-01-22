@@ -33,6 +33,7 @@ export interface WebviewMessage {
 		| "googleLogout"
 		| "addRobodevPrompt"
 		| "reviewCodebase"
+		| "summarizeTask"
 	text?: string
 	askResponse?: ClineAskResponse
 	apiConfiguration?: ApiConfiguration

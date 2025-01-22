@@ -36,6 +36,7 @@ export const ExtensionStateContextProvider: React.FC<{
 		isSignedIn: false,
 		isSignInLoading: false,
 		userErrors: undefined,
+		summarizeTaskEnabled: false,
 	})
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)
