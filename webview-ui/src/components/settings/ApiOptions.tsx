@@ -10,12 +10,16 @@ import {
 	geminiModels,
 	openAiNativeDefaultModelId,
 	openAiNativeModels,
+	deepSeekModels,
+	mistralModels,
+	deepSeekDefaultModelId,
+	mistralDefaultModelId,
+	openRouterDefaultModelId,
+	openRouterDefaultModelInfo,
+	openAiModelInfoSaneDefaults,
 } from "../../../../src/shared/api"
 import { useExtensionState } from "../../context/ExtensionStateContext"
-import { ModelDescriptionMarkdown, OPENROUTER_MODEL_PICKER_Z_INDEX } from "./OpenRouterModelPicker"
-import { vscode } from "../../utils/vscode"
-import VSCodeButtonLink from "../common/VSCodeButtonLink"
-import OpenRouterModelPicker, { ModelDescriptionMarkdown } from "./OpenRouterModelPicker"
+import { ModelDescriptionMarkdown } from "./OpenRouterModelPicker"
 import styled from "styled-components"
 import * as vscodemodels from "vscode"
 
@@ -41,8 +45,6 @@ const DropdownContainer = styled.div<{ zIndex?: number }>`
 	}
 `
 
-const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) => {
-	const { apiConfiguration, setApiConfiguration } = useExtensionState()
 declare module "vscode" {
 	interface LanguageModelChatSelector {
 		vendor?: string

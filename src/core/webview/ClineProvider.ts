@@ -14,7 +14,7 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
-import { ExtensionMessage } from "../../shared/ExtensionMessage"
+import { ExtensionMessage, ExtensionState } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ClineCheckpointRestore, WebviewMessage } from "../../shared/WebviewMessage"
 import { fileExistsAtPath } from "../../utils/fs"
@@ -42,49 +42,8 @@ https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default
 
 https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
 */
-export const cwd = vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop")
-
-type SecretKey =
-	| "apiKey"
-	| "openRouterApiKey"
-	| "awsAccessKey"
-	| "awsSecretKey"
-	| "awsSessionToken"
-	| "openAiApiKey"
-	| "geminiApiKey"
-	| "openAiNativeApiKey"
-	| "deepSeekApiKey"
-	| "mistralApiKey"
-type GlobalStateKey =
-	| "apiProvider"
-	| "apiModelId"
-	| "awsRegion"
-	| "awsUseCrossRegionInference"
-	| "vertexProjectId"
-	| "vertexRegion"
-	| "lastShownAnnouncementId"
-	| "customInstructions"
-	| "taskHistory"
-	| "openAiBaseUrl"
-	| "openAiModelId"
-	| "ollamaModelId"
-	| "ollamaBaseUrl"
-	| "lmStudioModelId"
-	| "lmStudioBaseUrl"
-	| "anthropicBaseUrl"
-	| "azureApiVersion"
-	| "openRouterModelId"
-	| "openRouterModelInfo"
-	| "autoApprovalSettings"
-	| "browserSettings"
-	| "chatSettings"
-	| "vsCodeLmModelSelector"
-	| "isSignedIn"
-	| "authFlow"
-	| "idToken"
-	| "accessToken"
-	| "refreshToken"
-	| "user"
+export const cwd =
+	vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath).at(0) ?? path.join(os.homedir(), "Desktop")
 
 export const GlobalFileNames = {
 	apiConversationHistory: "api_conversation_history.json",
@@ -242,11 +201,14 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async initClineWithApiConversationHistory(apiConversationHistory: Anthropic.MessageParam[], task?: string) {
 		await this.clearTask()
-		const { apiConfiguration, customInstructions, autoApprovalSettings } = await this.getState()
+		const { apiConfiguration, customInstructions, autoApprovalSettings, browserSettings, chatSettings } =
+			await this.getState()
 		this.cline = new Cline(
 			this,
 			apiConfiguration,
 			autoApprovalSettings,
+			browserSettings,
+			chatSettings,
 			customInstructions,
 			task,
 			undefined,
@@ -272,7 +234,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 
 	async initClineWithHistoryItem(historyItem: HistoryItem) {
 		await this.clearTask()
-		const { apiConfiguration, customInstructions, autoApprovalSettings, browserSettings, chatSettings, isSignedIn } =
+		const { apiConfiguration, customInstructions, autoApprovalSettings, browserSettings, chatSettings } =
 			await this.getState()
 		this.cline = new Cline(
 			this,
@@ -487,7 +449,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								lmStudioBaseUrl,
 								anthropicBaseUrl,
 								geminiApiKey,
-								openAiNativeApiKey,
 								deepSeekApiKey,
 								mistralApiKey,
 								azureApiVersion,
@@ -513,7 +474,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("lmStudioBaseUrl", lmStudioBaseUrl)
 							await this.updateGlobalState("anthropicBaseUrl", anthropicBaseUrl)
 							await this.storeSecret("geminiApiKey", geminiApiKey)
-							await this.storeSecret("openAiNativeApiKey", openaiKey)
 							await this.storeSecret("deepSeekApiKey", deepSeekApiKey)
 							await this.storeSecret("mistralApiKey", mistralApiKey)
 							await this.updateGlobalState("azureApiVersion", azureApiVersion)
@@ -1096,7 +1056,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			user,
 			userErrors,
 			isSignInLoading,
-			summarizeTaskEnabled
+			summarizeTaskEnabled,
 		} = await this.getState()
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -1248,7 +1208,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("user") as Promise<IUser | undefined>,
 			this.getGlobalState("userErrors") as Promise<UserError[] | undefined>,
 			this.getGlobalState("isSignInLoading") as Promise<boolean>,
-			this.getGlobalState("summarizeTaskEnabled") as Promise<boolean>
+			this.getGlobalState("summarizeTaskEnabled") as Promise<boolean>,
 		])
 
 		let apiProvider: ApiProvider

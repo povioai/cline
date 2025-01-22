@@ -52,8 +52,7 @@ import { AssistantMessageContent, parseAssistantMessage, ToolParamName, ToolUseN
 import { constructNewFileContent } from "./assistant-message/diff"
 import { parseMentions } from "./mentions"
 import { formatResponse } from "./prompts/responses"
-import { addContextualInstructions, addUserInstructions, SYSTEM_PROMPT } from "./prompts/system"
-import { getNextTruncationRange, getTruncatedMessages } from "./sliding-window"
+import { addContextualInstructions } from "./prompts/system"
 import { ClineProvider, GlobalFileNames } from "./webview/ClineProvider"
 import { RobodevUsageLogService } from "../services/robodev/data/usage-logs/robodev-usage-log.service"
 import { OpenRouterHandler } from "../api/providers/openrouter"
@@ -141,7 +140,6 @@ export class Cline {
 		this.autoApprovalSettings = autoApprovalSettings
 		this.browserSettings = browserSettings
 		this.chatSettings = chatSettings
-		this.isSignedIn = isSignedIn
 		this.apiConfiguration = apiConfiguration
 		this.robodevUsageLogService = new RobodevUsageLogService(provider.context)
 		if (historyItem) {

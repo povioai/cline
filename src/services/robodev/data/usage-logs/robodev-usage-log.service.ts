@@ -17,8 +17,7 @@ export class RobodevUsageLogService {
 
 		try {
 			await this.robodevUsageLogClient.createUsageLog(organizationId, data)
-		}
-		catch (error) {
+		} catch (error) {
 			console.error(error)
 		}
 	}

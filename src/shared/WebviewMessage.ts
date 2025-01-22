@@ -37,7 +37,7 @@ export interface WebviewMessage {
 		| "toggleToolAutoApprove"
 		| "toggleMcpServer"
 		| "getLatestState"
-	// | "relaunchChromeDebugMode"
+		// | "relaunchChromeDebugMode"
 		| "googleLogin"
 		| "googleLogout"
 		| "addRobodevPrompt"
