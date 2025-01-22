@@ -14,6 +14,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 	const { apiConfiguration, version, customInstructions, setCustomInstructions } = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
+
 	const handleSubmit = () => {
 		vscode.postMessage({ type: "apiConfiguration", apiConfiguration })
 		vscode.postMessage({ type: "customInstructions", text: customInstructions })

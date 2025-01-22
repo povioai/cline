@@ -3,24 +3,64 @@ import { Fragment, memo, useCallback, useMemo, useState } from "react"
 import { useEvent } from "react-use"
 import {
 	ApiConfiguration,
+	ApiProvider,
 	ModelInfo,
 	anthropicDefaultModelId,
 	anthropicModels,
 	geminiModels,
 	openAiNativeDefaultModelId,
 	openAiNativeModels,
+	deepSeekModels,
+	mistralModels,
+	deepSeekDefaultModelId,
+	mistralDefaultModelId,
+	openRouterDefaultModelId,
+	openRouterDefaultModelInfo,
+	openAiModelInfoSaneDefaults,
 } from "../../../../src/shared/api"
 import { useExtensionState } from "../../context/ExtensionStateContext"
-import { ModelDescriptionMarkdown, OPENROUTER_MODEL_PICKER_Z_INDEX } from "./OpenRouterModelPicker"
+import { ModelDescriptionMarkdown } from "./OpenRouterModelPicker"
+import styled from "styled-components"
+import * as vscodemodels from "vscode"
 
 interface ApiOptionsProps {
 	showModelOptions: boolean
 	apiErrorMessage?: string
 	modelIdErrorMessage?: string
+	isPopup?: boolean
 }
 
-const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: ApiOptionsProps) => {
-	const { apiConfiguration, setApiConfiguration } = useExtensionState()
+// This is necessary to ensure dropdown opens downward, important for when this is used in popup
+const DROPDOWN_Z_INDEX = 1001 // Higher than the OpenRouterModelPicker's and ModelSelectorTooltip's z-index
+
+const DropdownContainer = styled.div<{ zIndex?: number }>`
+	position: relative;
+	z-index: ${(props) => props.zIndex || DROPDOWN_Z_INDEX};
+
+	// Force dropdowns to open downward
+	& vscode-dropdown::part(listbox) {
+		position: absolute !important;
+		top: 100% !important;
+		bottom: auto !important;
+	}
+`
+
+declare module "vscode" {
+	interface LanguageModelChatSelector {
+		vendor?: string
+		family?: string
+		version?: string
+		id?: string
+	}
+}
+
+const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, isPopup }: ApiOptionsProps) => {
+	const { apiConfiguration, setApiConfiguration, uriScheme } = useExtensionState()
+	const [ollamaModels, setOllamaModels] = useState<string[]>([])
+	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
+	const [vsCodeLmModels, setVsCodeLmModels] = useState<vscodemodels.LanguageModelChatSelector[]>([])
+	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
+	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
 
 	const handleInputChange = (field: keyof ApiConfiguration) => (event: any) => {
@@ -70,8 +110,8 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 	}
 
 	return (
-		<div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-			<div className="dropdown-container">
+		<div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: isPopup ? -10 : 0 }}>
+			<DropdownContainer className="dropdown-container">
 				<label htmlFor="api-provider">
 					<span style={{ fontWeight: 500 }}>API Provider</span>
 				</label>
@@ -79,11 +119,15 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 					id="api-provider"
 					value={selectedProvider}
 					onChange={handleInputChange("apiProvider")}
-					style={{ minWidth: 130, position: "relative", zIndex: OPENROUTER_MODEL_PICKER_Z_INDEX + 1 }}>
+					style={{
+						minWidth: 130,
+						position: "relative",
+					}}>
+					<VSCodeOption value="openrouter">OpenRouter</VSCodeOption>
 					<VSCodeOption value="anthropic">Anthropic</VSCodeOption>
 					<VSCodeOption value="openai-native">OpenAI</VSCodeOption>
 				</VSCodeDropdown>
-			</div>
+			</DropdownContainer>
 
 			{apiErrorMessage && (
 				<p
@@ -111,6 +155,7 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage }: 
 						modelInfo={selectedModelInfo}
 						isDescriptionExpanded={isDescriptionExpanded}
 						setIsDescriptionExpanded={setIsDescriptionExpanded}
+						isPopup={isPopup}
 					/>
 				</>
 			)}
@@ -143,11 +188,13 @@ export const ModelInfoView = ({
 	modelInfo,
 	isDescriptionExpanded,
 	setIsDescriptionExpanded,
+	isPopup,
 }: {
 	selectedModelId: string
 	modelInfo: ModelInfo
 	isDescriptionExpanded: boolean
 	setIsDescriptionExpanded: (isExpanded: boolean) => void
+	isPopup?: boolean
 }) => {
 	const isGemini = Object.keys(geminiModels).includes(selectedModelId)
 
@@ -158,6 +205,7 @@ export const ModelInfoView = ({
 				markdown={modelInfo.description}
 				isExpanded={isDescriptionExpanded}
 				setIsExpanded={setIsDescriptionExpanded}
+				isPopup={isPopup}
 			/>
 		),
 		<ModelInfoSupportsItem
@@ -263,7 +311,11 @@ const ModelInfoSupportsItem = ({
 	</span>
 )
 
-export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
+export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration): {
+	selectedProvider: ApiProvider
+	selectedModelId: string
+	selectedModelInfo: ModelInfo
+} {
 	const provider = apiConfiguration?.apiProvider || "anthropic"
 	const modelId = apiConfiguration?.apiModelId
 
@@ -288,6 +340,45 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
 		case "openai-native":
 			return getProviderData(openAiNativeModels, openAiNativeDefaultModelId)
+		case "deepseek":
+			return getProviderData(deepSeekModels, deepSeekDefaultModelId)
+		case "mistral":
+			return getProviderData(mistralModels, mistralDefaultModelId)
+		case "openrouter":
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.openRouterModelId || openRouterDefaultModelId,
+				selectedModelInfo: apiConfiguration?.openRouterModelInfo || openRouterDefaultModelInfo,
+			}
+		case "openai":
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.openAiModelId || "",
+				selectedModelInfo: openAiModelInfoSaneDefaults,
+			}
+		case "ollama":
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.ollamaModelId || "",
+				selectedModelInfo: openAiModelInfoSaneDefaults,
+			}
+		case "lmstudio":
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.lmStudioModelId || "",
+				selectedModelInfo: openAiModelInfoSaneDefaults,
+			}
+		case "vscode-lm":
+			return {
+				selectedProvider: provider,
+				selectedModelId: apiConfiguration?.vsCodeLmModelSelector
+					? `${apiConfiguration.vsCodeLmModelSelector.vendor}/${apiConfiguration.vsCodeLmModelSelector.family}`
+					: "",
+				selectedModelInfo: {
+					...openAiModelInfoSaneDefaults,
+					supportsImages: false, // VSCode LM API currently doesn't support images
+				},
+			}
 		default:
 			return getProviderData(anthropicModels, anthropicDefaultModelId)
 	}
