@@ -1,7 +1,7 @@
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import DynamicTextArea from "react-textarea-autosize"
-import { useClickAway, useWindowSize } from "react-use"
+import { useClickAway, useEvent, useWindowSize } from "react-use"
 import styled from "styled-components"
 import {
 	anthropicDefaultModelId,
@@ -29,6 +29,7 @@ import Thumbnails from "../common/Thumbnails"
 import ApiOptions from "../settings/ApiOptions"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
+import { ExtensionMessage } from "../../../../src/shared/ExtensionMessage"
 
 interface ChatTextAreaProps {
 	inputValue: string
@@ -241,7 +242,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const buttonRef = useRef<HTMLDivElement>(null)
 		const [arrowPosition, setArrowPosition] = useState(0)
 		const [menuPosition, setMenuPosition] = useState(0)
-
 		// Add a ref to track previous menu state
 		const prevShowModelSelector = useRef(showModelSelector)
 
@@ -609,6 +609,34 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			}, 100)
 		}, [chatSettings.mode, textAreaDisabled])
 
+		const handleUserInputMessage = useCallback(
+			(event: MessageEvent) => {
+				const message: ExtensionMessage = event.data
+				if (message.type !== "userInput") return
+
+				const userInput = message.text ?? "Failed to enhance the prompt"
+
+				setInputValue(userInput)
+			},
+			[setInputValue],
+		)
+
+		useEvent("message", handleUserInputMessage)
+
+		const handleEnhancePromptButtonClick = useCallback(() => {
+			if (textAreaDisabled) return
+
+			if (!textAreaRef.current || !textAreaRef.current.value || textAreaRef.current.value.trim() === "") {
+				setInputValue("The enhance prompt button takes your input and enhances it in a more detailed prompt")
+				return
+			}
+
+			vscode.postMessage({
+				type: "enhancePrompt",
+				text: inputValue,
+			})
+		}, [inputValue, setInputValue, textAreaDisabled])
+
 		const handleContextButtonClick = useCallback(() => {
 			if (textAreaDisabled) return
 
@@ -932,6 +960,18 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 				<ControlsContainer>
 					<ButtonGroup>
+						<VSCodeButton
+							data-testid="context-button"
+							appearance="icon"
+							aria-label="Add Context"
+							disabled={textAreaDisabled}
+							onClick={handleEnhancePromptButtonClick}
+							style={{ padding: "0px 0px", height: "20px" }}>
+							<ButtonContainer>
+								<span className="codicon codicon-sparkle" style={{ fontSize: "14px", marginBottom: -3 }} />
+								{/* {showButtonText && <span style={{ fontSize: "10px" }}>Context</span>} */}
+							</ButtonContainer>
+						</VSCodeButton>
 						<VSCodeButton
 							data-testid="context-button"
 							appearance="icon"

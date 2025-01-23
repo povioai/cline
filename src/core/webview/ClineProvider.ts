@@ -36,6 +36,7 @@ import { getCurrentTimestamp } from "../../utils/custom-timestamp.util"
 import { ensureFolderExists } from "../../utils/ensure-folder-exists.util"
 import { robodevCustomInstructions } from "../../services/robodev/prompts/robodev-custom-instructions.prompt"
 import { robodevReviewCodebasePrompt } from "../../services/robodev/prompts/robodev-review-codebase.prompt"
+import { robodevPromptEnhancerPrompt } from "../../services/robodev/prompts/robodev-prompt-enhancer.prompt"
 
 /*
 https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -249,6 +250,34 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		)
 	}
 
+	async enhancePrompt(prompt?: string): Promise<void> {
+		vscode.window.showInformationMessage(prompt ?? "no prompt")
+		if (!prompt) {
+			await this.postMessageToWebview({ type: "userInput" })
+			return
+		}
+
+		const { apiConfiguration } = await this.getState()
+		const apiHandler = buildApiHandler(apiConfiguration)
+
+		const stream = apiHandler.createMessage(robodevPromptEnhancerPrompt(), [
+			{
+				role: "user",
+				content: prompt,
+			},
+		])
+
+		let enhancedPrompt: string = ""
+
+		for await (const chunk of stream) {
+			if (chunk.type === "text") {
+				enhancedPrompt += chunk.text
+			}
+		}
+
+		await this.postMessageToWebview({ type: "userInput", text: enhancedPrompt.trim() })
+	}
+
 	async summarizeTask() {
 		const taskId = this.cline?.taskId
 
@@ -355,6 +384,10 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		webview.onDidReceiveMessage(
 			async (message: WebviewMessage) => {
 				switch (message.type) {
+					case "enhancePrompt": {
+						await this.enhancePrompt(message.text)
+						break
+					}
 					case "summarizeTask": {
 						await this.summarizeTask()
 						break

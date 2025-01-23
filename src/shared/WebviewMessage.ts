@@ -43,6 +43,7 @@ export interface WebviewMessage {
 		| "addRobodevPrompt"
 		| "reviewCodebase"
 		| "summarizeTask"
+		| "enhancePrompt"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse

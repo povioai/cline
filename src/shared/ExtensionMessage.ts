@@ -25,6 +25,7 @@ export interface ExtensionMessage {
 		| "relinquishControl"
 		| "vsCodeLmModels"
 		| "requestVsCodeLmModels"
+		| "userInput"
 	text?: string
 	action?:
 		| "chatButtonClicked"
