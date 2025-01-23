@@ -99,6 +99,7 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 						value={customInstructions ?? ""}
 						style={{ width: "100%" }}
 						rows={4}
+						resize="vertical"
 						placeholder={'e.g. "Run unit tests at the end", "Use TypeScript with async/await", "Speak in Spanish"'}
 						onInput={(e: any) => setCustomInstructions(e.target?.value ?? "")}>
 						<span style={{ fontWeight: "500" }}>Custom Instructions</span>
