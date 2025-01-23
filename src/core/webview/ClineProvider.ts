@@ -14,7 +14,7 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
-import { ExtensionMessage } from "../../shared/ExtensionMessage"
+import { ExtensionMessage, ExtensionState } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ClineCheckpointRestore, WebviewMessage } from "../../shared/WebviewMessage"
 import { fileExistsAtPath } from "../../utils/fs"
@@ -362,8 +362,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 					case "reviewCodebase": {
 						const robodevFolderPath = path.join(cwd, GlobalFileNames.robodevSummary)
 						await ensureFolderExists(robodevFolderPath)
-						const taskId = this.cline!.taskId!
-						const task = robodevReviewCodebasePrompt(getCurrentTimestamp(), taskId)
+						const taskId = this.cline?.taskId
+						const task = robodevReviewCodebasePrompt(getCurrentTimestamp(), taskId ?? "1")
 						await this.initClineWithTask(task)
 						break
 					}
@@ -449,7 +449,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								lmStudioBaseUrl,
 								anthropicBaseUrl,
 								geminiApiKey,
-								deepSeekApiKey,
 								mistralApiKey,
 								azureApiVersion,
 								openRouterModelId,
@@ -474,7 +473,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 							await this.updateGlobalState("lmStudioBaseUrl", lmStudioBaseUrl)
 							await this.updateGlobalState("anthropicBaseUrl", anthropicBaseUrl)
 							await this.storeSecret("geminiApiKey", geminiApiKey)
-							await this.storeSecret("deepSeekApiKey", deepSeekApiKey)
 							await this.storeSecret("mistralApiKey", mistralApiKey)
 							await this.updateGlobalState("azureApiVersion", azureApiVersion)
 							await this.updateGlobalState("openRouterModelId", openRouterModelId)

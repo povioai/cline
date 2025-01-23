@@ -30,8 +30,11 @@ export class RobodevOrganizationService {
 
 		const openaiKey = data?.items?.find((data) => data.provider === "OPENAI")?.key
 
+		const deepSeekKey = data?.items?.find((data) => data.provider === "DEEPSEEK")?.key
+
 		await this.contextStorageService.storeSecret("apiKey", anthropicKey)
 		await this.contextStorageService.storeSecret("openAiNativeApiKey", openaiKey)
+		await this.contextStorageService.storeSecret("deepSeekApiKey", deepSeekKey)
 
 		return {
 			anthropicKey,

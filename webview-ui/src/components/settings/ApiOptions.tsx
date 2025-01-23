@@ -123,9 +123,9 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, is
 						minWidth: 130,
 						position: "relative",
 					}}>
-					<VSCodeOption value="openrouter">OpenRouter</VSCodeOption>
 					<VSCodeOption value="anthropic">Anthropic</VSCodeOption>
 					<VSCodeOption value="openai-native">OpenAI</VSCodeOption>
+					<VSCodeOption value="deepseek">DeepSeek</VSCodeOption>
 				</VSCodeDropdown>
 			</DropdownContainer>
 
@@ -142,13 +142,14 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, is
 
 			{selectedProvider !== "openai" && showModelOptions && (
 				<>
-					<div className="dropdown-container">
+					<DropdownContainer zIndex={DROPDOWN_Z_INDEX - 1} className="dropdown-container">
 						<label htmlFor="model-id">
 							<span style={{ fontWeight: 500 }}>Model</span>
 						</label>
 						{selectedProvider === "openai-native" && createDropdown(openAiNativeModels)}
 						{selectedProvider === "anthropic" && createDropdown(anthropicModels)}
-					</div>
+						{selectedProvider === "deepseek" && createDropdown(deepSeekModels)}
+					</DropdownContainer>
 
 					<ModelInfoView
 						selectedModelId={selectedModelId}
