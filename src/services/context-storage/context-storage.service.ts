@@ -10,8 +10,10 @@ export type SecretKey =
 	| "geminiApiKey"
 	| "openAiNativeApiKey"
 	| "deepSeekApiKey"
+	| "mistralApiKey"
 	| "accessToken"
 	| "refreshToken"
+
 export type GlobalStateKey =
 	| "apiProvider"
 	| "apiModelId"
@@ -33,6 +35,9 @@ export type GlobalStateKey =
 	| "openRouterModelId"
 	| "openRouterModelInfo"
 	| "autoApprovalSettings"
+	| "browserSettings"
+	| "chatSettings"
+	| "vsCodeLmModelSelector"
 	| "isSignedIn"
 	| "authFlow"
 	| "idToken"
@@ -40,6 +45,8 @@ export type GlobalStateKey =
 	| "userErrors"
 	| "isSignInLoading"
 	| "currentOrganizationId"
+	| "summarizeTaskEnabled"
+	| "apiProviders"
 
 export class ContextStorageService {
 	constructor(private readonly context: vscode.ExtensionContext) {}

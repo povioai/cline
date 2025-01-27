@@ -20,11 +20,11 @@ import { vscode } from "../../utils/vscode"
 import HistoryPreview from "../history/HistoryPreview"
 import { normalizeApiConfiguration } from "../settings/ApiOptions"
 import Announcement from "./Announcement"
+import AutoApproveMenu from "./AutoApproveMenu"
 import BrowserSessionRow from "./BrowserSessionRow"
 import ChatRow from "./ChatRow"
 import ChatTextArea from "./ChatTextArea"
 import TaskHeader from "./TaskHeader"
-import AutoApproveMenu from "./AutoApproveMenu"
 
 interface ChatViewProps {
 	isHidden: boolean
@@ -36,7 +36,7 @@ interface ChatViewProps {
 export const MAX_IMAGES_PER_MESSAGE = 20 // Anthropic limits to 20 images
 
 const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryView }: ChatViewProps) => {
-	const { version, clineMessages: messages, taskHistory, apiConfiguration, user } = useExtensionState()
+	const { version, summarizeTaskEnabled, clineMessages: messages, taskHistory, apiConfiguration, user } = useExtensionState()
 
 	//const task = messages.length > 0 ? (messages[0].say === "task" ? messages[0] : undefined) : undefined) : undefined
 	const task = useMemo(() => messages.at(0), [messages]) // leaving this less safe version here since if the first message is not a task, then the extension is in a bad state and needs to be debugged (see Cline.abort)
@@ -99,7 +99,14 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						case "followup":
 							setTextAreaDisabled(isPartial)
 							setClineAsk("followup")
-							setEnableButtons(isPartial)
+							setEnableButtons(false)
+							// setPrimaryButtonText(undefined)
+							// setSecondaryButtonText(undefined)
+							break
+						case "plan_mode_response":
+							setTextAreaDisabled(isPartial)
+							setClineAsk("plan_mode_response")
+							setEnableButtons(false)
 							// setPrimaryButtonText(undefined)
 							// setSecondaryButtonText(undefined)
 							break
@@ -154,7 +161,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setClineAsk("completion_result")
 							setEnableButtons(!isPartial)
 							setPrimaryButtonText("Start New Task")
-							setSecondaryButtonText(undefined)
+							setSecondaryButtonText(summarizeTaskEnabled ? "Summarize task" : undefined)
 							break
 						case "resume_task":
 							setTextAreaDisabled(false)
@@ -262,6 +269,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				} else if (clineAsk) {
 					switch (clineAsk) {
 						case "followup":
+						case "plan_mode_response":
 						case "tool":
 						case "browser_action_launch":
 						case "command": // user can provide feedback to a tool or command use
@@ -298,6 +306,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		vscode.postMessage({ type: "clearTask" })
 	}, [])
 
+	const summarizeTask = useCallback(() => {
+		vscode.postMessage({ type: "summarizeTask" })
+	}, [])
 	/*
 	This logic depends on the useEffect[messages] above to set clineAsk, after which buttons are shown and we then send an askResponse to the extension.
 	*/
@@ -354,6 +365,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					askResponse: "noButtonClicked",
 				})
 				break
+			case "completion_result":
+			case "resume_completed_task":
+				summarizeTask()
 		}
 		setTextAreaDisabled(true)
 		setClineAsk(undefined)
@@ -361,7 +375,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		// setPrimaryButtonText(undefined)
 		// setSecondaryButtonText(undefined)
 		disableAutoScrollRef.current = false
-	}, [clineAsk, startNewTask, isStreaming])
+	}, [clineAsk, startNewTask, isStreaming, summarizeTask])
 
 	const handleTaskCloseButtonClick = useCallback(() => {
 		startNewTask()
@@ -658,7 +672,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	useEvent("wheel", handleWheel, window, { passive: true }) // passive improves scrolling performance
 
 	const placeholderText = useMemo(() => {
-		const text = task ? "Type a message (@ to add context)..." : "Type your task here (@ to add context)..."
+		const text = task ? "Type a message..." : "Type your task here..."
 		return text
 	}, [task])
 

@@ -5,8 +5,8 @@ import {
 	userMeResponseSchema,
 	UserRegisterRequest,
 } from "./robodev-auth.models"
-import { robodevRestClient } from "../robodev-rest.client"
-import { UserNotPartOfAnyOrganizationError } from "../../../shared/errors"
+import { robodevRestClient } from "../../robodev-rest.client"
+import { UserNotPartOfAnyOrganizationError } from "../../../../shared/errors"
 
 export class RobodevAuthClient {
 	async getLoginUrl(): Promise<string> {
