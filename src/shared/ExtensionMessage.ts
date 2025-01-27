@@ -46,6 +46,12 @@ export interface ExtensionMessage {
 	mcpServers?: McpServer[]
 }
 
+export interface LlmApiProvider {
+	name: string
+	value: string
+	enabled: boolean
+}
+
 export interface ExtensionState {
 	version: string
 	apiConfiguration?: ApiConfiguration
@@ -64,6 +70,7 @@ export interface ExtensionState {
 	userErrors?: UserError[]
 	isSignInLoading?: boolean
 	summarizeTaskEnabled?: boolean
+	apiProviders?: LlmApiProvider[]
 }
 
 export interface ClineMessage {

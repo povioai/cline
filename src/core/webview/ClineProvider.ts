@@ -14,7 +14,7 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { ApiProvider, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
-import { ExtensionMessage, ExtensionState } from "../../shared/ExtensionMessage"
+import { ExtensionMessage, ExtensionState, LlmApiProvider } from "../../shared/ExtensionMessage"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ClineCheckpointRestore, WebviewMessage } from "../../shared/WebviewMessage"
 import { fileExistsAtPath } from "../../utils/fs"
@@ -461,7 +461,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 						break
 					case "apiConfiguration":
 						if (message.apiConfiguration) {
-							await this.robodevOrganizationService.storeOrganizationKeys()
+							let defaultApiProvider = message.apiConfiguration.apiProvider
+							const providers = await this.robodevOrganizationService.storeOrganizationKeys()
+
+							const currentProvider = providers.find((provider) => provider.value === defaultApiProvider)
+
+							if (!currentProvider || !currentProvider.enabled) {
+								defaultApiProvider =
+									(providers.find((provider) => provider.enabled)?.value as ApiProvider) ?? "anthropic"
+							}
 
 							const {
 								apiProvider,
@@ -488,7 +496,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 								openRouterModelInfo,
 								vsCodeLmModelSelector,
 							} = message.apiConfiguration
-							await this.updateGlobalState("apiProvider", apiProvider)
+							await this.updateGlobalState("apiProvider", defaultApiProvider)
 							await this.updateGlobalState("apiModelId", apiModelId)
 							await this.storeSecret("openRouterApiKey", openRouterApiKey)
 							await this.storeSecret("awsAccessKey", awsAccessKey)
@@ -1088,6 +1096,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			userErrors,
 			isSignInLoading,
 			summarizeTaskEnabled,
+			apiProviders,
 		} = await this.getState()
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -1107,6 +1116,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			userErrors,
 			isSignInLoading,
 			summarizeTaskEnabled,
+			apiProviders,
 		}
 	}
 
@@ -1201,6 +1211,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			userErrors,
 			isSignInLoading,
 			summarizeTaskEnabled,
+			apiProviders,
 		] = await Promise.all([
 			this.getGlobalState("apiProvider") as Promise<ApiProvider | undefined>,
 			this.getGlobalState("apiModelId") as Promise<string | undefined>,
@@ -1240,6 +1251,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			this.getGlobalState("userErrors") as Promise<UserError[] | undefined>,
 			this.getGlobalState("isSignInLoading") as Promise<boolean>,
 			this.getGlobalState("summarizeTaskEnabled") as Promise<boolean>,
+			this.getGlobalState("apiProviders") as Promise<LlmApiProvider[] | undefined>,
 		])
 
 		let apiProvider: ApiProvider
@@ -1297,6 +1309,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			userErrors: userErrors,
 			isSignInLoading: isSignInLoading,
 			summarizeTaskEnabled: summarizeTaskEnabled,
+			apiProviders: apiProviders,
 		}
 	}
 
@@ -1400,6 +1413,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		try {
 			await this.robodevAuthService.handleAuthorizationFlowCallback(data)
 			await this.robodevOrganizationService.storeOrganizationKeys()
+
 			vscode.window.showInformationMessage("Logged in successfully")
 		} catch (e) {
 			if (e instanceof UserNotPartOfAnyOrganizationError) {

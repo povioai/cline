@@ -1,8 +1,8 @@
 import { RobodevOrganizationClient } from "./robodev-organization.client"
-import { RobodevOrganizationKeys } from "./robodev-organization.types"
 import { UserNotPartOfAnyOrganizationError } from "../../../../shared/errors"
 import { ContextStorageService } from "../../../context-storage/context-storage.service"
 import vscode from "vscode"
+import { LlmApiProvider } from "../../../../shared/ExtensionMessage"
 
 export class RobodevOrganizationService {
 	private readonly contextStorageService: ContextStorageService
@@ -13,7 +13,7 @@ export class RobodevOrganizationService {
 		this.robodevOrganizationClient = new RobodevOrganizationClient()
 	}
 
-	async storeOrganizationKeys(): Promise<RobodevOrganizationKeys> {
+	async storeOrganizationKeys() {
 		const paginatedOrganizations = await this.robodevOrganizationClient.getUserOrganizations()
 
 		if (paginatedOrganizations.items.length === 0) {
@@ -36,9 +36,26 @@ export class RobodevOrganizationService {
 		await this.contextStorageService.storeSecret("openAiNativeApiKey", openaiKey)
 		await this.contextStorageService.storeSecret("deepSeekApiKey", deepSeekKey)
 
-		return {
-			anthropicKey,
-			openaiKey,
-		}
+		const availableProviders: LlmApiProvider[] = [
+			{
+				name: "Anthropic",
+				value: "anthropic",
+				enabled: !!anthropicKey,
+			},
+			{
+				name: "OpenAI",
+				value: "openai-native",
+				enabled: !!openaiKey,
+			},
+			{
+				name: "DeepSeek",
+				value: "deepseek",
+				enabled: !!deepSeekKey,
+			},
+		]
+
+		await this.contextStorageService.updateGlobalState("apiProviders", availableProviders)
+
+		return availableProviders
 	}
 }

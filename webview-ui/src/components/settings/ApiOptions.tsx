@@ -1,5 +1,5 @@
 import { VSCodeDropdown, VSCodeLink, VSCodeOption } from "@vscode/webview-ui-toolkit/react"
-import { Fragment, memo, useCallback, useMemo, useState } from "react"
+import { Fragment, memo, useCallback, useEffect, useMemo, useState } from "react"
 import { useEvent } from "react-use"
 import {
 	ApiConfiguration,
@@ -22,6 +22,7 @@ import { useExtensionState } from "../../context/ExtensionStateContext"
 import { ModelDescriptionMarkdown } from "./OpenRouterModelPicker"
 import styled from "styled-components"
 import * as vscodemodels from "vscode"
+import { LlmApiProvider } from "../../../../src/shared/ExtensionMessage"
 
 interface ApiOptionsProps {
 	showModelOptions: boolean
@@ -55,13 +56,28 @@ declare module "vscode" {
 }
 
 const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, isPopup }: ApiOptionsProps) => {
-	const { apiConfiguration, setApiConfiguration, uriScheme } = useExtensionState()
+	const { apiConfiguration, setApiConfiguration, uriScheme, apiProviders } = useExtensionState()
 	const [ollamaModels, setOllamaModels] = useState<string[]>([])
 	const [lmStudioModels, setLmStudioModels] = useState<string[]>([])
 	const [vsCodeLmModels, setVsCodeLmModels] = useState<vscodemodels.LanguageModelChatSelector[]>([])
 	const [anthropicBaseUrlSelected, setAnthropicBaseUrlSelected] = useState(!!apiConfiguration?.anthropicBaseUrl)
 	const [azureApiVersionSelected, setAzureApiVersionSelected] = useState(!!apiConfiguration?.azureApiVersion)
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+
+	useEffect(() => {
+		let provider = apiConfiguration?.apiProvider || "anthropic"
+
+		const isEnabled = apiProviders?.find((item) => item.value === provider)?.enabled
+
+		if (!isEnabled) {
+			provider = apiProviders?.find((provider) => provider.enabled)?.value as ApiProvider
+		}
+
+		setApiConfiguration({
+			...apiConfiguration,
+			apiProvider: provider,
+		})
+	}, [apiConfiguration, apiProviders, setApiConfiguration])
 
 	const handleInputChange = (field: keyof ApiConfiguration) => (event: any) => {
 		setApiConfiguration({
@@ -71,11 +87,16 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, is
 	}
 
 	const { selectedProvider, selectedModelId, selectedModelInfo } = useMemo(() => {
-		return normalizeApiConfiguration(apiConfiguration)
-	}, [apiConfiguration])
+		return normalizeApiConfiguration(apiConfiguration, apiProviders)
+	}, [apiConfiguration, apiProviders])
 
-	const handleMessage = useCallback((event: MessageEvent) => {}, [])
-	useEvent("message", handleMessage)
+	const isProviderDisabled = (providerValue: string): boolean => {
+		const provider = apiProviders?.find((provider) => provider.value === providerValue)
+
+		if (!provider) return false
+
+		return !provider.enabled
+	}
 
 	/*
 	VSCodeDropdown has an open bug where dynamically rendered options don't auto select the provided value prop. You can see this for yourself by comparing  it with normal select/option elements, which work as expected.
@@ -123,9 +144,15 @@ const ApiOptions = ({ showModelOptions, apiErrorMessage, modelIdErrorMessage, is
 						minWidth: 130,
 						position: "relative",
 					}}>
-					<VSCodeOption value="anthropic">Anthropic</VSCodeOption>
-					<VSCodeOption value="openai-native">OpenAI</VSCodeOption>
-					<VSCodeOption value="deepseek">DeepSeek</VSCodeOption>
+					<VSCodeOption disabled={isProviderDisabled("anthropic")} value="anthropic">
+						Anthropic
+					</VSCodeOption>
+					<VSCodeOption disabled={isProviderDisabled("openai-native")} value="openai-native">
+						OpenAI
+					</VSCodeOption>
+					<VSCodeOption disabled={isProviderDisabled("deepseek")} value="deepseek">
+						DeepSeek
+					</VSCodeOption>
 				</VSCodeDropdown>
 			</DropdownContainer>
 
@@ -312,12 +339,15 @@ const ModelInfoSupportsItem = ({
 	</span>
 )
 
-export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration): {
+export function normalizeApiConfiguration(
+	apiConfiguration?: ApiConfiguration,
+	apiProviders?: LlmApiProvider[],
+): {
 	selectedProvider: ApiProvider
 	selectedModelId: string
 	selectedModelInfo: ModelInfo
 } {
-	const provider = apiConfiguration?.apiProvider || "anthropic"
+	let provider = apiConfiguration?.apiProvider || "anthropic"
 	const modelId = apiConfiguration?.apiModelId
 
 	const getProviderData = (models: Record<string, ModelInfo>, defaultId: string) => {
