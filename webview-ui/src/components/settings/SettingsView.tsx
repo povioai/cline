@@ -1,7 +1,6 @@
 import { VSCodeButton, VSCodeLink, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react"
 import { memo, useEffect, useState } from "react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
-import { validateApiConfiguration, validateModelId } from "../../utils/validate"
 import { vscode } from "../../utils/vscode"
 import ApiOptions from "./ApiOptions"
 
@@ -12,21 +11,18 @@ type SettingsViewProps = {
 }
 
 const SettingsView = ({ onDone }: SettingsViewProps) => {
-	const { apiConfiguration, version, customInstructions, setCustomInstructions, openRouterModels } =
-		useExtensionState()
+	const { apiConfiguration, version, customInstructions, setCustomInstructions } = useExtensionState()
 	const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
 	const [modelIdErrorMessage, setModelIdErrorMessage] = useState<string | undefined>(undefined)
-	const handleSubmit = () => {
-		const apiValidationResult = validateApiConfiguration(apiConfiguration)
-		const modelIdValidationResult = validateModelId(apiConfiguration, openRouterModels)
 
-		setApiErrorMessage(apiValidationResult)
-		setModelIdErrorMessage(modelIdValidationResult)
-		if (!apiValidationResult && !modelIdValidationResult) {
-			vscode.postMessage({ type: "apiConfiguration", apiConfiguration })
-			vscode.postMessage({ type: "customInstructions", text: customInstructions })
-			onDone()
-		}
+	const handleSubmit = () => {
+		vscode.postMessage({ type: "apiConfiguration", apiConfiguration })
+		vscode.postMessage({ type: "customInstructions", text: customInstructions })
+		onDone()
+	}
+
+	const handleLogOut = () => {
+		vscode.postMessage({ type: "googleLogout" })
 	}
 
 	useEffect(() => {
@@ -45,6 +41,14 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 
 	If we only want to run code once on mount we can use react-use's useEffectOnce or useMount
 	*/
+	const addRobodevPrompt = () => {
+		vscode.postMessage({ type: "addRobodevPrompt" })
+	}
+
+	const reviewCodeBase = () => {
+		vscode.postMessage({ type: "reviewCodebase" })
+		onDone()
+	}
 
 	const handleResetState = () => {
 		vscode.postMessage({ type: "resetState" })
@@ -75,7 +79,13 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 				<VSCodeButton onClick={handleSubmit}>Done</VSCodeButton>
 			</div>
 			<div
-				style={{ flexGrow: 1, overflowY: "scroll", paddingRight: 8, display: "flex", flexDirection: "column" }}>
+				style={{
+					flexGrow: 1,
+					overflowY: "scroll",
+					paddingRight: 8,
+					display: "flex",
+					flexDirection: "column",
+				}}>
 				<div style={{ marginBottom: 5 }}>
 					<ApiOptions
 						showModelOptions={true}
@@ -89,9 +99,8 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 						value={customInstructions ?? ""}
 						style={{ width: "100%" }}
 						rows={4}
-						placeholder={
-							'e.g. "Run unit tests at the end", "Use TypeScript with async/await", "Speak in Spanish"'
-						}
+						resize="vertical"
+						placeholder={'e.g. "Run unit tests at the end", "Use TypeScript with async/await", "Speak in Spanish"'}
 						onInput={(e: any) => setCustomInstructions(e.target?.value ?? "")}>
 						<span style={{ fontWeight: "500" }}>Custom Instructions</span>
 					</VSCodeTextArea>
@@ -102,8 +111,30 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 							color: "var(--vscode-descriptionForeground)",
 						}}>
 						These instructions are added to the end of the system prompt sent with every request.
+						<button
+							onClick={addRobodevPrompt}
+							style={{
+								fontSize: "12px",
+								margin: "0",
+								padding: "0",
+								background: "none",
+								border: "none",
+								color: "white",
+								textDecoration: "underline",
+								cursor: "pointer",
+							}}>
+							Add robodev prompt
+						</button>
 					</p>
 				</div>
+
+				<VSCodeButton onClick={reviewCodeBase} style={{ marginTop: "5px", marginBottom: "5px", width: "auto" }}>
+					Review codebase
+				</VSCodeButton>
+
+				<VSCodeButton onClick={handleLogOut} style={{ marginTop: "10px", width: "auto" }}>
+					Log out
+				</VSCodeButton>
 
 				{IS_DEV && (
 					<>
@@ -131,13 +162,25 @@ const SettingsView = ({ onDone }: SettingsViewProps) => {
 						marginTop: "auto",
 						padding: "10px 8px 15px 0px",
 					}}>
-					<p style={{ wordWrap: "break-word", margin: 0, padding: 0 }}>
+					<p
+						style={{
+							wordWrap: "break-word",
+							margin: 0,
+							padding: 0,
+						}}>
 						If you have any questions or feedback, feel free to open an issue at{" "}
 						<VSCodeLink href="https://github.com/cline/cline" style={{ display: "inline" }}>
 							https://github.com/cline/cline
 						</VSCodeLink>
 					</p>
-					<p style={{ fontStyle: "italic", margin: "10px 0 0 0", padding: 0 }}>v{version}</p>
+					<p
+						style={{
+							fontStyle: "italic",
+							margin: "10px 0 0 0",
+							padding: 0,
+						}}>
+						v{version}
+					</p>
 				</div>
 			</div>
 		</div>

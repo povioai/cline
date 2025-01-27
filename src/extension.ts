@@ -6,6 +6,7 @@ import { ClineProvider } from "./core/webview/ClineProvider"
 import { createClineAPI } from "./exports"
 import "./utils/path" // necessary to have access to String.prototype.toPosix
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
+import { IAuthorizationFlowCallbackQuery } from "./services/robodev/interfaces/authorization-flow-callback.query.interface"
 
 /*
 Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -35,17 +36,33 @@ export function activate(context: vscode.ExtensionContext) {
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.plusButtonClicked", async () => {
+		vscode.commands.registerCommand("robodev-vs.plusButtonClicked", async () => {
+			const isSignedIn = getState(context, "isSignedIn")
+			if (!isSignedIn) {
+				vscode.window.showInformationMessage("Please sign in first")
+				return
+			}
 			outputChannel.appendLine("Plus button Clicked")
 			await sidebarProvider.clearTask()
 			await sidebarProvider.postStateToWebview()
-			await sidebarProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+			await sidebarProvider.postMessageToWebview({
+				type: "action",
+				action: "chatButtonClicked",
+			})
 		}),
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.mcpButtonClicked", () => {
-			sidebarProvider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
+		vscode.commands.registerCommand("robodev-vs.mcpButtonClicked", () => {
+			const isSignedIn = getState(context, "isSignedIn")
+			if (!isSignedIn) {
+				vscode.window.showInformationMessage("Please sign in first")
+				return
+			}
+			sidebarProvider.postMessageToWebview({
+				type: "action",
+				action: "mcpButtonClicked",
+			})
 		}),
 	)
 
@@ -72,8 +89,8 @@ export function activate(context: vscode.ExtensionContext) {
 		// TODO: use better svg icon with light and dark variants (see https://stackoverflow.com/questions/58365687/vscode-extension-iconpath)
 
 		panel.iconPath = {
-			light: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "robot_panel_light.png"),
-			dark: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "robot_panel_dark.png"),
+			light: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "robodev_light.png"),
+			dark: vscode.Uri.joinPath(context.extensionUri, "assets", "icons", "robodev_dark.png"),
 		}
 		tabProvider.resolveWebviewView(panel)
 
@@ -82,19 +99,32 @@ export function activate(context: vscode.ExtensionContext) {
 		await vscode.commands.executeCommand("workbench.action.lockEditorGroup")
 	}
 
-	context.subscriptions.push(vscode.commands.registerCommand("cline.popoutButtonClicked", openClineInNewTab))
-	context.subscriptions.push(vscode.commands.registerCommand("cline.openInNewTab", openClineInNewTab))
+	context.subscriptions.push(vscode.commands.registerCommand("robodev-vs.popoutButtonClicked", openClineInNewTab))
+	context.subscriptions.push(vscode.commands.registerCommand("robodev-vs.openInNewTab", openClineInNewTab))
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.settingsButtonClicked", () => {
+		vscode.commands.registerCommand("robodev-vs.settingsButtonClicked", () => {
 			//vscode.window.showInformationMessage(message)
+			const isSignedIn = getState(context, "isSignedIn")
+			if (!isSignedIn) {
+				vscode.window.showInformationMessage("Please sign in first")
+				return
+			}
 			sidebarProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		}),
 	)
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("cline.historyButtonClicked", () => {
-			sidebarProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
+		vscode.commands.registerCommand("robodev-vs.historyButtonClicked", () => {
+			const isSignedIn = getState(context, "isSignedIn")
+			if (!isSignedIn) {
+				vscode.window.showInformationMessage("Please sign in first")
+				return
+			}
+			sidebarProvider.postMessageToWebview({
+				type: "action",
+				action: "historyButtonClicked",
+			})
 		}),
 	)
 
@@ -110,15 +140,14 @@ export function activate(context: vscode.ExtensionContext) {
 			return Buffer.from(uri.query, "base64").toString("utf-8")
 		}
 	})()
-	context.subscriptions.push(
-		vscode.workspace.registerTextDocumentContentProvider(DIFF_VIEW_URI_SCHEME, diffContentProvider),
-	)
+	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(DIFF_VIEW_URI_SCHEME, diffContentProvider))
 
 	// URI Handler
 	const handleUri = async (uri: vscode.Uri) => {
 		const path = uri.path
 		const query = new URLSearchParams(uri.query.replace(/\+/g, "%2B"))
 		const visibleProvider = ClineProvider.getVisibleInstance()
+
 		if (!visibleProvider) {
 			return
 		}
@@ -130,6 +159,25 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				break
 			}
+			case "/auth/callback": {
+				const accessToken = query.get("accessToken")
+
+				if (!accessToken) {
+					vscode.window.showErrorMessage("Failed to login")
+					return
+				}
+
+				const data: IAuthorizationFlowCallbackQuery = {
+					accessToken: accessToken!,
+					refreshToken: query.get("refreshToken") ?? undefined,
+					idToken: query.get("idToken") ?? undefined,
+					email: query.get("email") ?? undefined,
+					name: query.get("name") ?? undefined,
+				}
+
+				await visibleProvider.handleAuthorizationFlowCallback(data)
+				break
+			}
 			default:
 				break
 		}
@@ -137,6 +185,14 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.window.registerUriHandler({ handleUri }))
 
 	return createClineAPI(outputChannel, sidebarProvider)
+}
+
+export function getState(context: vscode.ExtensionContext, key: string): any {
+	const state = context.globalState.get(key)
+	if (!state) {
+		return undefined
+	}
+	return state
 }
 
 // This method is called when your extension is deactivated

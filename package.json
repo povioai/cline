@@ -1,8 +1,8 @@
 {
-	"name": "claude-dev",
-	"displayName": "Cline (prev. Claude Dev)",
+	"name": "povioai",
+	"displayName": "Robodev",
 	"description": "Autonomous coding agent right in your IDE, capable of creating/editing files, running commands, using the browser, and more with your permission every step of the way.",
-	"version": "3.0.4",
+	"version": "1.1.2",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
@@ -12,15 +12,15 @@
 		"vscode": "^1.84.0"
 	},
 	"author": {
-		"name": "Cline Bot Inc."
+		"name": "Robodev"
 	},
 	"license": "Apache-2.0",
-	"publisher": "saoudrizwan",
+	"publisher": "robodev",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/cline/cline"
+		"url": "https://github.com/povioai/cline"
 	},
-	"homepage": "https://cline.bot",
+	"homepage": "https://www.robodev.com/",
 	"categories": [
 		"AI",
 		"Chat",
@@ -49,49 +49,49 @@
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "claude-dev-ActivityBar",
-					"title": "Cline",
-					"icon": "$(robot)"
+					"id": "robodev-vs-ActivityBar",
+					"title": "Robodev",
+					"icon": "assets/icons/robodev_dark.png"
 				}
 			]
 		},
 		"views": {
-			"claude-dev-ActivityBar": [
+			"robodev-vs-ActivityBar": [
 				{
 					"type": "webview",
-					"id": "claude-dev.SidebarProvider",
+					"id": "robodev-vs.SidebarProvider",
 					"name": ""
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "cline.plusButtonClicked",
+				"command": "robodev-vs.plusButtonClicked",
 				"title": "New Task",
 				"icon": "$(add)"
 			},
 			{
-				"command": "cline.mcpButtonClicked",
+				"command": "robodev-vs.mcpButtonClicked",
 				"title": "MCP Servers",
 				"icon": "$(server)"
 			},
 			{
-				"command": "cline.historyButtonClicked",
+				"command": "robodev-vs.historyButtonClicked",
 				"title": "History",
 				"icon": "$(history)"
 			},
 			{
-				"command": "cline.popoutButtonClicked",
+				"command": "robodev-vs.popoutButtonClicked",
 				"title": "Open in Editor",
 				"icon": "$(link-external)"
 			},
 			{
-				"command": "cline.settingsButtonClicked",
+				"command": "robodev-vs.settingsButtonClicked",
 				"title": "Settings",
 				"icon": "$(settings-gear)"
 			},
 			{
-				"command": "cline.openInNewTab",
+				"command": "robodev-vs.openInNewTab",
 				"title": "Open In New Tab",
 				"category": "Cline"
 			}
@@ -99,31 +99,50 @@
 		"menus": {
 			"view/title": [
 				{
-					"command": "cline.plusButtonClicked",
+					"command": "robodev-vs.plusButtonClicked",
 					"group": "navigation@1",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == robodev-vs.SidebarProvider"
 				},
 				{
-					"command": "cline.mcpButtonClicked",
+					"command": "robodev-vs.mcpButtonClicked",
 					"group": "navigation@2",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == robodev-vs.SidebarProvider"
 				},
 				{
-					"command": "cline.historyButtonClicked",
+					"command": "robodev-vs.historyButtonClicked",
 					"group": "navigation@3",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == robodev-vs.SidebarProvider"
 				},
 				{
-					"command": "cline.popoutButtonClicked",
+					"command": "robodev-vs.popoutButtonClicked",
 					"group": "navigation@4",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == robodev-vs.SidebarProvider"
 				},
 				{
-					"command": "cline.settingsButtonClicked",
+					"command": "robodev-vs.settingsButtonClicked",
 					"group": "navigation@5",
-					"when": "view == claude-dev.SidebarProvider"
+					"when": "view == robodev-vs.SidebarProvider"
 				}
 			]
+		},
+		"configuration": {
+			"title": "Robodev",
+			"properties": {
+				"robodev-vs.vsCodeLmModelSelector": {
+					"type": "object",
+					"properties": {
+						"vendor": {
+							"type": "string",
+							"description": "The vendor of the language model (e.g. copilot)"
+						},
+						"family": {
+							"type": "string",
+							"description": "The family of the language model (e.g. gpt-4)"
+						}
+					},
+					"description": "Settings for VSCode Language Model API"
+				}
+			}
 		}
 	},
 	"scripts": {
@@ -145,7 +164,8 @@
 		"start:webview": "cd webview-ui && npm run start",
 		"build:webview": "cd webview-ui && npm run build",
 		"test:webview": "cd webview-ui && npm run test",
-		"publish:marketplace": "vsce publish && ovsx publish"
+		"publish:marketplace": "vsce publish && ovsx publish",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@types/diff": "^5.2.1",
@@ -159,6 +179,7 @@
 		"@vscode/test-electron": "^2.4.0",
 		"esbuild": "^0.21.5",
 		"eslint": "^8.57.0",
+		"husky": "^9.1.7",
 		"npm-run-all": "^4.1.5",
 		"prettier": "^3.3.3",
 		"should": "^13.2.3",
@@ -169,8 +190,10 @@
 		"@anthropic-ai/sdk": "^0.26.0",
 		"@anthropic-ai/vertex-sdk": "^0.4.1",
 		"@google/generative-ai": "^0.18.0",
+		"@mistralai/mistralai": "^1.3.6",
 		"@modelcontextprotocol/sdk": "^1.0.1",
 		"@types/clone-deep": "^4.0.4",
+		"@types/get-folder-size": "^3.0.4",
 		"@types/pdf-parse": "^1.1.4",
 		"@types/turndown": "^5.0.5",
 		"@vscode/codicons": "^0.0.36",
@@ -183,6 +206,7 @@
 		"diff": "^5.2.0",
 		"execa": "^9.5.2",
 		"fast-deep-equal": "^3.1.3",
+		"get-folder-size": "^5.0.0",
 		"globby": "^14.0.2",
 		"isbinaryfile": "^5.0.2",
 		"mammoth": "^1.8.0",
@@ -194,6 +218,7 @@
 		"puppeteer-chromium-resolver": "^23.0.0",
 		"puppeteer-core": "^23.4.0",
 		"serialize-error": "^11.0.3",
+		"simple-git": "^3.27.0",
 		"strip-ansi": "^7.1.0",
 		"tree-sitter-wasms": "^0.1.11",
 		"turndown": "^7.2.0",

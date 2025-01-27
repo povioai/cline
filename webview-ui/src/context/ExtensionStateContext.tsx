@@ -2,16 +2,13 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { useEvent } from "react-use"
 import { DEFAULT_AUTO_APPROVAL_SETTINGS } from "../../../src/shared/AutoApprovalSettings"
 import { ExtensionMessage, ExtensionState } from "../../../src/shared/ExtensionMessage"
-import {
-	ApiConfiguration,
-	ModelInfo,
-	openRouterDefaultModelId,
-	openRouterDefaultModelInfo,
-} from "../../../src/shared/api"
+import { ApiConfiguration, ModelInfo, openRouterDefaultModelId, openRouterDefaultModelInfo } from "../../../src/shared/api"
 import { findLastIndex } from "../../../src/shared/array"
 import { McpServer } from "../../../src/shared/mcp"
 import { convertTextMateToHljs } from "../utils/textMateToHljs"
 import { vscode } from "../utils/vscode"
+import { DEFAULT_BROWSER_SETTINGS } from "../../../src/shared/BrowserSettings"
+import { DEFAULT_CHAT_SETTINGS } from "../../../src/shared/ChatSettings"
 
 interface ExtensionStateContextType extends ExtensionState {
 	didHydrateState: boolean
@@ -23,17 +20,27 @@ interface ExtensionStateContextType extends ExtensionState {
 	setApiConfiguration: (config: ApiConfiguration) => void
 	setCustomInstructions: (value?: string) => void
 	setShowAnnouncement: (value: boolean) => void
+	setIsSignedIn: (value: boolean) => void
+	setIsSignInLoading: (value: boolean) => void
 }
 
 const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
 
-export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ExtensionStateContextProvider: React.FC<{
+	children: React.ReactNode
+}> = ({ children }) => {
 	const [state, setState] = useState<ExtensionState>({
 		version: "",
 		clineMessages: [],
 		taskHistory: [],
 		shouldShowAnnouncement: false,
 		autoApprovalSettings: DEFAULT_AUTO_APPROVAL_SETTINGS,
+		isSignedIn: false,
+		browserSettings: DEFAULT_BROWSER_SETTINGS,
+		chatSettings: DEFAULT_CHAT_SETTINGS,
+		isSignInLoading: false,
+		userErrors: undefined,
+		summarizeTaskEnabled: false,
 	})
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)
@@ -61,6 +68,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 							config.lmStudioModelId,
 							config.geminiApiKey,
 							config.openAiNativeApiKey,
+							config.deepSeekApiKey,
+							config.mistralApiKey,
+							config.vsCodeLmModelSelector,
 						].some((key) => key !== undefined)
 					: false
 				setShowWelcome(!hasKey)
@@ -120,9 +130,23 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		openRouterModels,
 		mcpServers,
 		filePaths,
-		setApiConfiguration: (value) => setState((prevState) => ({ ...prevState, apiConfiguration: value })),
-		setCustomInstructions: (value) => setState((prevState) => ({ ...prevState, customInstructions: value })),
-		setShowAnnouncement: (value) => setState((prevState) => ({ ...prevState, shouldShowAnnouncement: value })),
+		setApiConfiguration: (value) =>
+			setState((prevState) => ({
+				...prevState,
+				apiConfiguration: value,
+			})),
+		setCustomInstructions: (value) =>
+			setState((prevState) => ({
+				...prevState,
+				customInstructions: value,
+			})),
+		setShowAnnouncement: (value) =>
+			setState((prevState) => ({
+				...prevState,
+				shouldShowAnnouncement: value,
+			})),
+		setIsSignedIn: (value: boolean) => setState((prevState) => ({ ...prevState, isSignedIn: value })),
+		setIsSignInLoading: (value: boolean) => setState((prevState) => ({ ...prevState, isSignInLoading: value })),
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>
