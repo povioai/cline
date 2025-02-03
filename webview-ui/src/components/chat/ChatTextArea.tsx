@@ -2,7 +2,7 @@ import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import DynamicTextArea from "react-textarea-autosize"
 import { useClickAway, useEvent, useWindowSize } from "react-use"
-import styled from "styled-components"
+import styled, { keyframes } from "styled-components"
 import {
 	anthropicDefaultModelId,
 	bedrockDefaultModelId,
@@ -205,6 +205,20 @@ const ModelButtonContent = styled.div`
 	white-space: nowrap;
 `
 
+const spin = keyframes`
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+`
+
+const Spinner = styled.div`
+	border: 3px solid rgba(255, 255, 255, 0.3);
+	border-top: 3px solid #fff;
+	border-radius: 50%;
+	width: 8px;
+	height: 8px;
+	animation: ${spin} 1s linear infinite;
+`
+
 const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 	(
 		{
@@ -242,6 +256,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const buttonRef = useRef<HTMLDivElement>(null)
 		const [arrowPosition, setArrowPosition] = useState(0)
 		const [menuPosition, setMenuPosition] = useState(0)
+		const [isEnhancePromptButtonLoading, setEnhancePromptButtonLoading] = useState(false)
 		// Add a ref to track previous menu state
 		const prevShowModelSelector = useRef(showModelSelector)
 
@@ -613,7 +628,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			(event: MessageEvent) => {
 				const message: ExtensionMessage = event.data
 				if (message.type !== "userInput") return
-
+				setEnhancePromptButtonLoading(false)
 				const userInput = message.text ?? "Failed to enhance the prompt"
 
 				setInputValue(userInput)
@@ -635,6 +650,8 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				type: "enhancePrompt",
 				text: inputValue,
 			})
+
+			setEnhancePromptButtonLoading(true)
 		}, [inputValue, setInputValue, textAreaDisabled])
 
 		const handleContextButtonClick = useCallback(() => {
@@ -968,8 +985,11 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							onClick={handleEnhancePromptButtonClick}
 							style={{ padding: "0px 0px", height: "20px" }}>
 							<ButtonContainer>
-								<span className="codicon codicon-sparkle" style={{ fontSize: "14px", marginBottom: -3 }} />
-								{/* {showButtonText && <span style={{ fontSize: "10px" }}>Context</span>} */}
+								{isEnhancePromptButtonLoading ? (
+									<Spinner />
+								) : (
+									<span className="codicon codicon-sparkle" style={{ fontSize: "14px", marginBottom: -3 }} />
+								)}
 							</ButtonContainer>
 						</VSCodeButton>
 						<VSCodeButton

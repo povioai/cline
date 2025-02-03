@@ -251,7 +251,6 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	async enhancePrompt(prompt?: string): Promise<void> {
-		vscode.window.showInformationMessage(prompt ?? "no prompt")
 		if (!prompt) {
 			await this.postMessageToWebview({ type: "userInput" })
 			return
